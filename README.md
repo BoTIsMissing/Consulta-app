@@ -1,59 +1,75 @@
-# ConsultaAppNew
+# Consulta BR — Angular + Node.js
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.4.
+Sistema de consulta de pessoas por nome ou CPF no SQL Server.
 
-## Development server
+---
 
-To start a local development server, run:
+## Pré-requisitos
+
+- [Node.js](https://nodejs.org) instalado
+- [Angular CLI](https://angular.io/cli): `npm install -g @angular/cli`
+- Acesso ao servidor SQL Server
+
+---
+
+## Configuração
+
+### 1. Backend
+
+Edite `backend/server.js` e ajuste as credenciais:
+
+```js
+const config = {
+  server: '189.1.174.51',
+  user: 'seu_usuario',      // ← altere aqui
+  password: 'sua_senha',    // ← altere aqui
+  ...
+};
+```
+
+Instale as dependências e rode:
 
 ```bash
+cd backend
+npm install
+node server.js
+```
+
+### 2. Frontend Angular
+
+Na raiz do projeto:
+
+```bash
+npm install
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Acesse: http://localhost:4200
 
-## Code scaffolding
+---
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Estrutura
 
-```bash
-ng generate component component-name
+```
+consulta-app/
+├── backend/
+│   ├── server.js          ← API Node.js + Express
+│   └── package.json
+└── src/app/
+    ├── services/
+    │   └── consulta.service.ts
+    └── components/busca/
+        ├── busca.component.ts
+        ├── busca.component.html
+        └── busca.component.css
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+---
 
-```bash
-ng generate --help
-```
+## Como usar
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+1. Roda o backend (`node server.js`)
+2. Roda o Angular (`ng serve`)
+3. Acessa `http://localhost:4200`
+4. Seleciona o banco na barra lateral
+5. Digita nome ou CPF e pressiona Enter

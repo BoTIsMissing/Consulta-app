@@ -1,0 +1,99 @@
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-icon">⬡</span>
+      <span class="logo-text">Consulta<br><strong>BR</strong></span>
+    </div>
+
+    <nav class="nav">
+      <span class="nav-label">Base de dados</span>
+      <ul>
+        <li
+          *ngFor="let banco of bancos"
+          [class.ativo]="banco === bancoSelecionado"
+          (click)="bancoSelecionado = banco; limpar()"
+        >
+          {{ banco }}
+        </li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span>SQL Server</span>
+      <span class="dot online"></span>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <header class="topo">
+      <h1>Consulta de Pessoas</h1>
+      <p>Busque por <strong>nome</strong> ou <strong>CPF</strong> na base <em>{{ bancoSelecionado }}</em></p>
+    </header>
+
+    <div class="busca-wrap">
+      <div class="busca-bar">
+        <div class="input-wrap">
+          <span class="input-icon">{{ isCpf ? '🪪' : '🔍' }}</span>
+          <input
+            [(ngModel)]="termo"
+            placeholder="Nome ou CPF..."
+            (keyup.enter)="buscar()"
+            [disabled]="carregando"
+            autofocus
+          />
+          <button class="btn-limpar" *ngIf="termo" (click)="limpar()">✕</button>
+        </div>
+        <button class="btn-buscar" (click)="buscar()" [disabled]="carregando || termo.trim().length < 2">
+          {{ carregando ? 'Buscando...' : 'Buscar' }}
+        </button>
+      </div>
+      <p class="busca-hint">Digite ao menos 2 caracteres · Somente números = busca por CPF</p>
+    </div>
+
+    <!-- Estado: carregando -->
+    <div class="estado" *ngIf="carregando">
+      <div class="spinner"></div>
+      <p>Consultando {{ bancoSelecionado }}...</p>
+    </div>
+
+    <!-- Estado: erro -->
+    <div class="estado erro" *ngIf="erro && !carregando">
+      <span class="estado-icon">⚠</span>
+      <p>{{ erro }}</p>
+    </div>
+
+    <!-- Estado: sem resultados -->
+    <div class="estado vazio" *ngIf="buscaFeita && !carregando && !erro && resultados.length === 0">
+      <span class="estado-icon">◎</span>
+      <p>Nenhum registro encontrado para <strong>"{{ termo }}"</strong></p>
+    </div>
+
+    <!-- Resultados -->
+    <div class="resultados" *ngIf="resultados.length > 0 && !carregando">
+      <div class="resultados-header">
+        <span><strong>{{ total }}</strong> registro{{ total !== 1 ? 's' : '' }} encontrado{{ total !== 1 ? 's' : '' }}</span>
+        <span class="badge">{{ bancoSelecionado }}</span>
+      </div>
+
+      <div class="tabela-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th *ngFor="let col of colunas">{{ col }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of resultados">
+              <td *ngFor="let col of colunas">{{ row[col] ?? '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="tabela-nota" *ngIf="total === 100">Exibindo os primeiros 100 resultados. Refine a busca para mais precisão.</p>
+    </div>
+
+  </main>
+</div>
