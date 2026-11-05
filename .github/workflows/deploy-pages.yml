@@ -28,8 +28,12 @@ jobs:
           cache: npm
       - name: Configurar Pages
         uses: actions/configure-pages@v5
+      - name: Verificar arquivos de credenciais
+        run: npm run check:secrets
       - name: Instalar dependências
         run: npm ci
+      - name: Testar detecção de credenciais
+        run: npm run test:security
       - name: Compilar Angular
         run: npm run build -- --base-href /Consulta-app/
       - name: Enviar somente o frontend compilado
@@ -37,8 +41,26 @@ jobs:
         with:
           path: dist/consulta-app-new/browser
 
+  security:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Instalar dependências da API
+        working-directory: backend
+        run: npm ci --omit=dev
+      - name: Testar segurança e funcionamento da API
+        working-directory: backend
+        run: npm test
+
   deploy:
-    needs: build
+    needs: [build, security]
     runs-on: ubuntu-24.04
     permissions:
       pages: write

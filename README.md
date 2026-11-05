@@ -129,6 +129,12 @@ Na raiz, execute `npm.cmd install` e `npm.cmd start`. Em outro terminal, na past
 
 ## Verificação
 
+As rotas de busca agora recebem **POST com corpo JSON** (`termo`, `parcial` ou `id`), para evitar identificadores pessoais nas URLs. O frontend e a API precisam ser publicados juntos; versões antigas do frontend que usam GET recebem 405 e devem ser atualizadas no navegador após o deploy. A consulta de sessão continua sendo GET em `/api/auth/session`.
+
+A API limita chamadas a 120/minuto por IP e 30/minuto por conta autorizada, com no máximo duas consultas simultâneas por conta e cinco no total por processo. Excesso retorna 429. O pool SQL tem no máximo cinco conexões e é compartilhado sem fechamento a cada requisição. Corpos JSON têm limite de 4 KB; nomes, endereços, CPFs e IDs são validados antes do acesso ao banco. Os limites em memória valem por processo e reiniciam com o serviço; não substituem proteção de borda contra ataques distribuídos.
+
+O build de produção publica uma política CSP e uma política de referência restritas. O workflow também executa os testes da API e a verificação de arquivos de credenciais antes da publicação. Execute `npm.cmd run check:secrets` e `npm.cmd run test:security` na raiz para validar essa proteção localmente. A configuração pública Firebase é permitida; arquivos de credenciais e chaves privadas detectadas são bloqueados.
+
 Na pasta `backend`, execute `npm.cmd test`. Para verificar as credenciais configuradas e executar somente `SELECT 1` no banco, use `npm.cmd run check:sql`. Esse teste não consulta dados pessoais nem imprime senhas.
 
 `GET /healthz` verifica somente se o processo HTTP está funcionando; ele não confirma Firebase ou conexão SQL. A validação real do login e do banco depende dos arquivos secretos, das permissões e do acesso de rede no ambiente de publicação.

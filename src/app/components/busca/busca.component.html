@@ -43,6 +43,7 @@
       <div class="busca-bar">
         <div class="input-wrap">
           <input [ngModel]="termo" (ngModelChange)="atualizarTermo($event)"
+            [attr.maxlength]="tipo === 'CPF' ? 32 : tipo === 'Endereço' ? 200 : 150"
             [style.text-transform]="buscaPorNome ? 'uppercase' : 'none'"
             [placeholder]="tipo === 'CPF' ? 'Digite o CPF...' : tipo === 'Endereço' ? 'Rua, bairro, cidade ou CEP...' : tipo === 'Nome parcial' ? 'Ex.: JOÃO SILVA ou J. SILVA...' : 'Digite o nome completo...'"
             (keyup.enter)="buscar()" [disabled]="carregando" autofocus />
@@ -97,7 +98,7 @@
         <div class="mapa-wrap no-print" *ngIf="mapaUrl(e.latitude, e.longitude) as url"
           (click)="$event.stopPropagation()">
           <iframe class="mapa-embed" [src]="url" title="Localização do endereço no Google Maps"
-            loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+            loading="lazy" allowfullscreen referrerpolicy="no-referrer"></iframe>
         </div>
       </div>
     </div>
@@ -133,7 +134,7 @@
             <ng-container *ngIf="s.key === 'address'">
               <div class="mapa-wrap no-print" *ngIf="mapaUrl(row['latitude'], row['longitude']) as url">
                 <iframe class="mapa-embed" [src]="url" title="Localização do endereço no Google Maps"
-                  loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+                  loading="lazy" allowfullscreen referrerpolicy="no-referrer"></iframe>
               </div>
             </ng-container>
           </div>

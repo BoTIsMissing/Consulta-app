@@ -9,6 +9,15 @@ backend/*firebase-adminsdk*.json
 backend/*sql-credentials*.json
 backend/private/
 fr-base.json
+.env
+.env.*
+!.env.example
+*service-account*.json
+*firebase-adminsdk*.json
+*sql-credentials*.json
+*.key
+*.p12
+*.pfx
 
 # Angular
 dist/

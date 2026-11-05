@@ -17,7 +17,8 @@ function createAuthMiddleware({ verifyToken }) {
       }
       return res.status(401).json({ erro: 'Sessão inválida ou expirada. Entre novamente.' });
     }
-    if (!user.email || user.firebase?.sign_in_provider !== 'password') {
+    if (!user || typeof user.uid !== 'string' || !user.uid || user.uid.length > 128
+      || !user.email || user.firebase?.sign_in_provider !== 'password') {
       return res.status(403).json({ erro: 'Entre com o e-mail e a senha fornecidos pelo administrador.' });
     }
     if (user.panelAccess !== true) {

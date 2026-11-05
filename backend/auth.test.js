@@ -41,6 +41,14 @@ test('rejeita token inválido, expirado ou revogado', async () => {
   }
 });
 
+test('resposta de verificação sem UID não concede acesso nem interrompe o processo', async () => {
+  for (const user of [undefined, null, {}, { email: 'test@example.com', panelAccess: true }]) {
+    const result = await request({ token: 'token', user });
+    assert.equal(result.status, 403);
+    assert.equal(result.next, false);
+  }
+});
+
 test('não libera a API quando o Firebase está sem configuração', async () => {
   const result = await request({
     token: 'token', error: Object.assign(new Error(), { code: 'auth/not-configured' }),

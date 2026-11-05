@@ -1,8 +1,9 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ConsultaService, Candidato } from '../../services/consulta.service';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-busca',
@@ -11,7 +12,8 @@ import { ConsultaService, Candidato } from '../../services/consulta.service';
   templateUrl: './busca.component.html',
   styleUrls: ['./busca.component.scss'],
 })
-export class BuscaComponent {
+export class BuscaComponent implements OnDestroy {
+  private stopRequests = new Subject<void>();
   termo = '';
   tipo = 'Nome';
   notaTexto = '';
@@ -53,6 +55,7 @@ export class BuscaComponent {
 
   buscar() {
     if (!this.termo.trim() || this.termo.trim().length < 2) return;
+    this.stopRequests.next();
     this.atualizarTermo(this.termo.trim());
     this.carregando = true;
     this.erro = '';
@@ -65,7 +68,7 @@ export class BuscaComponent {
     this.notaTexto = '';
 
     if (this.tipo === 'CPF') {
-      this.consultaService.buscarCpf(this.termo).subscribe({
+      this.consultaService.buscarCpf(this.termo).pipe(takeUntil(this.stopRequests)).subscribe({
         next: (res) => {
           this.carregando = false;
           this.buscaFeita = true;
@@ -75,7 +78,7 @@ export class BuscaComponent {
         error: (err) => { this.handleErro(err); },
       });
     } else if (this.tipo === 'Endereço') {
-      this.consultaService.buscarEndereco(this.termo).subscribe({
+      this.consultaService.buscarEndereco(this.termo).pipe(takeUntil(this.stopRequests)).subscribe({
         next: (res) => {
           this.carregando = false;
           this.buscaFeita = true;
@@ -85,7 +88,7 @@ export class BuscaComponent {
         error: (err) => { this.handleErro(err); },
       });
     } else {
-      this.consultaService.buscarNome(this.termo, this.tipo === 'Nome parcial').subscribe({
+      this.consultaService.buscarNome(this.termo, this.tipo === 'Nome parcial').pipe(takeUntil(this.stopRequests)).subscribe({
         next: (res) => {
           this.carregando = false;
           this.buscaFeita = true;
@@ -103,7 +106,8 @@ export class BuscaComponent {
     }
   }
 
-  selecionarPessoa(id: number) {
+  selecionarPessoa(id: string | number) {
+    this.stopRequests.next();
     this.carregando = true;
     this.candidatos = [];
     this.dados = null;
@@ -112,7 +116,7 @@ export class BuscaComponent {
     this.notaTexto = '';
     this.cdr.detectChanges();
 
-    this.consultaService.buscarPorId(id).subscribe({
+    this.consultaService.buscarPorId(id).pipe(takeUntil(this.stopRequests)).subscribe({
       next: (res) => {
         this.carregando = false;
         this.dados = res.encontrado ? res.dados : null;
@@ -131,6 +135,8 @@ export class BuscaComponent {
   }
 
   limpar() {
+    this.stopRequests.next();
+    this.carregando = false;
     this.termo = '';
     this.dados = null;
     this.mapas.clear();
@@ -217,5 +223,10 @@ export class BuscaComponent {
 
   temDados(key: string): boolean {
     return this.dados && this.dados[key] && this.dados[key].length > 0;
+  }
+
+  ngOnDestroy() {
+    this.stopRequests.next();
+    this.stopRequests.complete();
   }
 }
