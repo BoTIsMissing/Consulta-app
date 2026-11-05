@@ -10,6 +10,8 @@
     "server": "189.1.174.51",
     "port": 1433,
     "database": "BR",
-    "credentialsFile": ""
+    "credentialsFile": "",
+    "caFile": "",
+    "tlsServerName": ""
   }
 }

@@ -63,6 +63,12 @@ O endereço de saída pode pertencer a uma faixa compartilhada com outros servi�
 
 A conexão usa TLS com validação do certificado (`encrypt: true`, `trustServerCertificate: false`). O SQL Server deve apresentar certificado confiável e válido para o endereço configurado; se necessário, utilize o nome DNS que corresponde ao certificado. Use uma conta SQL com as permissões de leitura necessárias ao aplicativo.
 
+Se o SQL usa certificado autoassinado ou emitido por uma autoridade privada, obtenha o certificado público PEM correto do administrador do banco e confirme sua identidade por um canal confiável. No Render, cadastre esse certificado ou a cadeia de autoridades certificadoras como Secret File `sql-ca.pem`, sem chave privada. Configure `SQL_CA_FILE=/etc/secrets/sql-ca.pem` e faça um novo deploy. A confiança adicional é aplicada somente ao SQL; a validação de certificados permanece ativada.
+
+Se a conexão é feita por IP, mas o certificado foi emitido para um nome DNS, configure também `SQL_TLS_SERVER_NAME` com o nome exato presente no certificado e confirmado pelo administrador do banco. Esse nome será validado pelo TLS; ele não altera o IP de conexão. Localmente, os campos opcionais `sql.caFile` e `sql.tlsServerName` em `runtime-config.json` oferecem a mesma configuração. O certificado deve estar válido, e as respectivas autoridades devem ser confiáveis. Apenas obter qualquer certificado pela rede e confiar nele sem confirmação não autentica o servidor correto.
+
+Para servidores com certificado autoassinado quando você não dispõe do certificado público confiável, há uma opção de compatibilidade explícita: `SQL_TRUST_SERVER_CERTIFICATE=true` nas Environment Variables do backend no Render. A conexão continua usando TLS (`encrypt: true`), mas deixa de validar a identidade do servidor, aumentando o risco de interceptação por um servidor impostor. Essa opção vem desativada por padrão, vale somente para o SQL e dispensa `SQL_CA_FILE` enquanto estiver ativa. O backend registra `[SQL_TLS_UNVERIFIED]` nesse modo. Para voltar à validação, remova a variável ou defina `false` e configure um certificado confiável quando necessário. Essa opção não oferece a mesma proteção de um certificado validado.
+
 Referência: [endereços de saída do Render](https://render.com/docs/outbound-ip-addresses).
 
 ## Frontend no GitHub Pages
@@ -86,6 +92,10 @@ npm.cmd run build -- --base-href /NOME_DO_REPOSITORIO/
 Para domínio próprio ou site na raiz, use o `base-href` correspondente. A configuração pública Firebase pode estar no frontend; o JSON privado e as credenciais SQL pertencem somente ao backend.
 
 ## Criar e liberar usuários
+
+No Windows, você pode liberar usuários sem digitar comandos: salve o JSON privado do Firebase como **fr-base.json** na sua pasta **Documentos** e dê dois cliques em **liberar-acesso.bat**, na raiz deste projeto. Digite o e-mail e pressione Enter. O programa usa a pasta Documentos real do Windows, inclusive quando redirecionada ao OneDrive, e mostra se a liberação foi concluída. Node.js e as dependências do backend precisam estar instalados. O arquivo privado nunca é exibido ou enviado ao GitHub.
+
+Esse atalho usa `fr-base.json` somente no computador do administrador. O Secret File no Render continua com o nome `service-account.json`; não é necessário alterá-lo. Após a liberação, o usuário deve sair da conta no site e entrar novamente.
 
 1. No Firebase, ative **Authentication → Sign-in method → E-mail/senha**.
 2. Em **Authentication → Users → Add user**, cadastre o e-mail e a senha.

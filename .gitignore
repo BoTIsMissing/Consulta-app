@@ -8,6 +8,7 @@ backend/*service-account*.json
 backend/*firebase-adminsdk*.json
 backend/*sql-credentials*.json
 backend/private/
+fr-base.json
 
 # Angular
 dist/

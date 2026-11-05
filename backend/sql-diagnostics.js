@@ -7,6 +7,10 @@ function getSqlDiagnostic(error) {
       INVALID_JSON: 'O arquivo secreto SQL não contém JSON válido.',
       INVALID_FIELDS: 'O JSON SQL precisa conter user e password como textos não vazios.',
       INVALID_SETTINGS: 'Confira o endereço, a porta e o banco na configuração SQL.',
+      INVALID_TLS_SETTINGS: 'Confira o caminho do certificado e o nome TLS do servidor SQL.',
+      CA_FILE_NOT_FOUND: 'O certificado público SQL não foi encontrado no caminho SQL_CA_FILE.',
+      CA_FILE_UNREADABLE: 'Não foi possível ler o certificado público SQL no caminho configurado.',
+      INVALID_CA_CERTIFICATE: 'O certificado SQL deve estar em formato PEM e não pode conter uma chave privada.',
     };
     return { code: 'SQL_CONFIGURATION_ERROR', message: reasons[error.reason] || 'Não foi possível carregar as credenciais SQL.' };
   }

@@ -6,7 +6,7 @@
   },
   "scripts": {
     "start": "node server.js",
-    "test": "node --test auth.test.js database-config.test.js sql-diagnostics.test.js",
+    "test": "node --test auth.test.js database-config.test.js sql-diagnostics.test.js sql-tls.test.js",
     "authorize": "node authorize-user.js",
     "check:sql": "node check-sql.js"
   },
