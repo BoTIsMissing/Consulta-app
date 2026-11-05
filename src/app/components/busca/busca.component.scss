@@ -1,3 +1,8 @@
+:host { display: block; min-width: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+button, a { touch-action: manipulation; }
+button:focus-visible, a:focus-visible { outline: 2px solid #93c5fd; outline-offset: 3px; }
+
 /* Layout */
 .layout {
   display: flex;
@@ -27,7 +32,9 @@
 .nav { padding: 20px 0; }
 .nav-label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; padding: 0 24px 10px; }
 .nav ul { list-style: none; margin: 0; padding: 0; }
-.nav li { padding: 9px 24px; font-size: 13px; color: #64748b; cursor: pointer; border-left: 2px solid transparent; transition: all 0.15s; display: flex; justify-content: space-between; align-items: center; }
+.nav li { font-size: 13px; color: #64748b; border-left: 2px solid transparent; transition: all 0.15s; }
+.nav button, .nav a { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 44px; padding: 9px 22px; border: 0; background: none; color: inherit; font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.nav a[aria-disabled="true"] { pointer-events: none; }
 .nav li:hover { color: #cbd5e1; background: #1e2636; }
 .nav li.ativo { color: #4f8ef7; border-left-color: #4f8ef7; background: #1a2540; }
 .nav li.tem-dados { color: #94a3b8; }
@@ -39,7 +46,7 @@
 .dot.online { background: #22c55e; }
 
 /* Main */
-.main { flex: 1; padding: 48px 56px; max-width: 1100px; }
+.main { flex: 1; min-width: 0; padding: 48px 56px; max-width: 1100px; }
 .topo { margin-bottom: 36px; }
 .topo h1 { font-size: 26px; font-weight: 600; color: #f1f5f9; margin: 0 0 6px; }
 .topo p { font-size: 14px; color: #64748b; margin: 0; }
@@ -47,7 +54,7 @@
 /* Busca */
 .busca-wrap { margin-bottom: 32px; }
 .busca-bar { display: flex; gap: 10px; margin-bottom: 8px; }
-.input-wrap { flex: 1; position: relative; display: flex; align-items: center; }
+.input-wrap { flex: 1; min-width: 0; position: relative; display: flex; align-items: center; }
 .input-wrap input { width: 100%; padding: 12px 40px 12px 16px; background: #161b27; border: 1px solid #1e2636; border-radius: 8px; color: #e2e8f0; font-size: 15px; outline: none; transition: border-color 0.15s; }
 .input-wrap input:focus { border-color: #4f8ef7; }
 .input-wrap input::placeholder { color: #334155; }
@@ -71,6 +78,7 @@
 .candidato-card { background: #161b27; border: 1px solid #1e2636; border-radius: 10px; padding: 14px 18px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; }
 .candidato-card:hover { border-color: #4f8ef7; background: #1a2540; }
 .candidato-nome { font-size: 15px; font-weight: 600; color: #e2e8f0; margin-bottom: 6px; }
+.candidato-nome, .candidato-info span, .nota-salva { overflow-wrap: anywhere; min-width: 0; }
 .candidato-info { display: flex; gap: 16px; font-size: 12px; color: #64748b; flex-wrap: wrap; margin-top: 4px; }
 
 /* Toolbar */
@@ -79,7 +87,7 @@
 .btn-acao:hover { background: #2d3748; color: #e2e8f0; }
 
 /* Seções */
-.secao { margin-bottom: 36px; }
+.secao { margin-bottom: 36px; scroll-margin-top: 16px; }
 .secao-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #1e2636; }
 .secao-titulo { font-size: 15px; font-weight: 600; color: #e2e8f0; }
 .badge { background: #1a2540; color: #4f8ef7; border: 1px solid #1e3a6e; padding: 3px 10px; border-radius: 20px; font-size: 11px; }
@@ -93,11 +101,12 @@
 .card-linha:last-child { border-bottom: none; }
 .card-linha:nth-child(odd) { background: #1a2030; }
 .card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; min-width: 160px; flex-shrink: 0; }
-.card-valor { font-size: 13px; color: #cbd5e1; word-break: break-all; display: flex; align-items: center; gap: 8px; flex: 1; }
+.card-valor { min-width: 0; font-size: 13px; color: #cbd5e1; display: flex; align-items: center; gap: 8px; flex: 1; }
+.valor-texto { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 
 /* Botão copiar */
-.btn-copiar { background: none; border: 1px solid #1e2636; border-radius: 4px; color: #475569; cursor: pointer; font-size: 11px; padding: 2px 6px; transition: all 0.15s; opacity: 0; }
-.card-linha:hover .btn-copiar { opacity: 1; }
+.btn-copiar { flex-shrink: 0; background: none; border: 1px solid #1e2636; border-radius: 4px; color: #475569; cursor: pointer; font-size: 11px; padding: 2px 6px; transition: all 0.15s; opacity: 0; }
+.card-linha:hover .btn-copiar, .btn-copiar:focus-visible { opacity: 1; }
 .btn-copiar:hover { background: #1e2636; color: #e2e8f0; }
 .btn-copiar.copiado { color: #22c55e; border-color: #22c55e; }
 
@@ -128,8 +137,51 @@
 }
 
 /* Responsivo */
-@media (max-width: 768px) {
+@media screen and (max-width: 1024px) {
+  .main { padding: 32px 24px; }
+}
+
+@media screen and (max-width: 768px) {
   .layout { flex-direction: column; }
-  .sidebar { width: 100%; min-height: auto; }
+  .sidebar { width: 100%; min-height: auto; padding: 16px; border-right: 0; border-bottom: 1px solid #1e2636; }
+  .logo { padding: 0; border: 0; }
+  .nav { min-width: 0; padding: 16px 0 0; }
+  .nav-label { padding: 0 0 8px; color: #94a3b8; }
+  .nav-tipos ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .nav li { border: 1px solid #263249; border-radius: 8px; overflow: hidden; }
+  .nav button, .nav a { padding: 10px 12px; }
+  .nav-secoes ul { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .nav-secoes li { flex: 0 0 auto; }
+  .nav-secoes a { white-space: nowrap; }
+  .sidebar-footer { display: none; }
   .main { padding: 24px 16px; }
+  .topo { margin-bottom: 24px; }
+  .topo h1 { font-size: 24px; }
+  .topo p { line-height: 1.5; }
+  .input-wrap input, .nota-input { font-size: 16px; }
+  .input-wrap input { min-height: 48px; }
+  .btn-limpar { right: 2px; min-width: 44px; min-height: 44px; }
+  .btn-buscar, .btn-acao { min-height: 44px; }
+  .busca-hint { color: #94a3b8; line-height: 1.5; }
+  .secao-header { flex-wrap: wrap; gap: 8px; }
+  .card-linha { flex-direction: column; align-items: stretch; gap: 6px; padding: 12px 14px; }
+  .card-label { min-width: 0; color: #94a3b8; overflow-wrap: anywhere; }
+  .card-valor { align-items: flex-start; font-size: 14px; line-height: 1.6; }
+  .btn-copiar { min-width: 44px; min-height: 44px; opacity: 1; }
+  .candidato-info { gap: 8px 16px; line-height: 1.5; }
+  .toolbar { flex-wrap: wrap; }
+  .mapa-embed { height: 240px; }
+}
+
+@media screen and (max-width: 480px) {
+  .busca-bar { flex-direction: column; }
+  .btn-buscar, .toolbar .btn-acao { width: 100%; }
+}
+
+@media screen and (min-width: 600px) and (max-width: 768px) {
+  .nav-tipos ul { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .btn-copiar { opacity: 1; min-width: 44px; min-height: 44px; }
 }

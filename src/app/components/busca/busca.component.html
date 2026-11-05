@@ -6,21 +6,26 @@
       <span class="logo-text">Consulta<br><strong>BR</strong></span>
     </div>
 
-    <nav class="nav">
+    <nav class="nav nav-tipos" aria-label="Tipo de busca">
       <span class="nav-label">Buscar por</span>
       <ul>
-        <li *ngFor="let t of ['Nome','Nome parcial','CPF','Endereço']" [class.ativo]="tipo === t" (click)="tipo = t; limpar()">
-          {{ t === 'Nome' || t === 'Nome parcial' ? '👤' : t === 'CPF' ? '🪪' : '📍' }} {{ t }}
+        <li *ngFor="let t of ['Nome','Nome parcial','CPF','Endereço']" [class.ativo]="tipo === t">
+          <button type="button" [attr.aria-pressed]="tipo === t" (click)="tipo = t; limpar()">
+            {{ t === 'Nome' || t === 'Nome parcial' ? '👤' : t === 'CPF' ? '🪪' : '📍' }} {{ t }}
+          </button>
         </li>
       </ul>
     </nav>
 
-    <nav class="nav" *ngIf="dados">
+    <nav class="nav nav-secoes" *ngIf="dados" aria-label="Seções do resultado">
       <span class="nav-label">Seções</span>
       <ul>
         <li *ngFor="let s of secoes" [class.tem-dados]="temDados(s.key)">
-          {{ s.label }}
-          <span class="count" *ngIf="temDados(s.key)">{{ dados[s.key].length }}</span>
+          <a [attr.href]="temDados(s.key) ? '#secao-' + s.key : null"
+            [attr.aria-disabled]="!temDados(s.key)" [attr.tabindex]="temDados(s.key) ? 0 : -1">
+            {{ s.label }}
+            <span class="count" *ngIf="temDados(s.key)">{{ dados[s.key].length }}</span>
+          </a>
         </li>
       </ul>
     </nav>
@@ -43,11 +48,14 @@
       <div class="busca-bar">
         <div class="input-wrap">
           <input [ngModel]="termo" (ngModelChange)="atualizarTermo($event)"
+            aria-label="Termo da busca" enterkeyhint="search"
+            [attr.inputmode]="tipo === 'CPF' ? 'numeric' : 'text'"
+            [attr.autocapitalize]="buscaPorNome ? 'characters' : 'none'"
             [attr.maxlength]="tipo === 'CPF' ? 32 : tipo === 'Endereço' ? 200 : 150"
             [style.text-transform]="buscaPorNome ? 'uppercase' : 'none'"
             [placeholder]="tipo === 'CPF' ? 'Digite o CPF...' : tipo === 'Endereço' ? 'Rua, bairro, cidade ou CEP...' : tipo === 'Nome parcial' ? 'Ex.: JOÃO SILVA ou J. SILVA...' : 'Digite o nome completo...'"
             (keyup.enter)="buscar()" [disabled]="carregando" autofocus />
-          <button class="btn-limpar" *ngIf="termo" (click)="limpar()">✕</button>
+          <button class="btn-limpar" type="button" aria-label="Limpar busca" *ngIf="termo" (click)="limpar()">✕</button>
         </div>
         <button class="btn-buscar" (click)="buscar()" [disabled]="carregando || termo.trim().length < 2">
           {{ carregando ? 'Buscando...' : 'Buscar' }}
@@ -112,7 +120,7 @@
       </div>
 
       <!-- Seções -->
-      <div class="secao" *ngFor="let s of secoes">
+      <div class="secao" *ngFor="let s of secoes" [id]="'secao-' + s.key">
         <div class="secao-header" *ngIf="temDados(s.key)">
           <span class="secao-titulo">{{ s.label }}</span>
           <span class="badge">{{ dados[s.key].length }} registro{{ dados[s.key].length !== 1 ? 's' : '' }}</span>
@@ -123,8 +131,9 @@
             <div class="card-linha" *ngFor="let col of keys(row, s.key)">
               <span class="card-label">{{ col === 'relative' ? 'Parentesco' : col }}</span>
               <span class="card-valor">
-                {{ temValor(row[col]) ? formatarValor(col, row[col]) : 'Não informado' }}
-                <button class="btn-copiar no-print" (click)="copiar(formatarValor(col, row[col]), col + row['id'])"
+                <span class="valor-texto">{{ temValor(row[col]) ? formatarValor(col, row[col]) : 'Não informado' }}</span>
+                <button class="btn-copiar no-print" type="button" [attr.aria-label]="'Copiar ' + (col === 'relative' ? 'parentesco' : col)"
+                  (click)="copiar(formatarValor(col, row[col]), col + row['id'])"
                   [class.copiado]="copiado === col + row['id']">
                   {{ copiado === col + row['id'] ? '✓' : '⎘' }}
                 </button>
@@ -148,7 +157,7 @@
         <div class="secao-header">
           <span class="secao-titulo">📝 Notas</span>
         </div>
-        <textarea class="nota-input" [(ngModel)]="notaTexto" placeholder="Adicione uma anotação sobre esta consulta..."></textarea>
+        <textarea class="nota-input" aria-label="Anotação sobre a consulta" [(ngModel)]="notaTexto" placeholder="Adicione uma anotação sobre esta consulta..."></textarea>
         <button class="btn-acao" (click)="salvarNota()">Salvar nota</button>
         <div class="nota-salva" *ngIf="notaSalva">
           <strong>Nota salva:</strong> {{ notaSalva }}

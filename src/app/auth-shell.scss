@@ -7,10 +7,10 @@
 h1 { font-size: 26px; margin: 12px 0; }
 .description { color: #94a3b8; font-size: 14px; line-height: 1.6; margin-bottom: 28px; }
 label { display: block; margin-bottom: 8px; font-size: 13px; color: #cbd5e1; }
-input { box-sizing: border-box; width: 100%; margin-bottom: 20px; padding: 12px 14px; border: 1px solid #334155; border-radius: 8px; background: #0f1117; color: #e2e8f0; font: inherit; font-size: 14px; }
+input { box-sizing: border-box; width: 100%; min-height: 48px; margin-bottom: 20px; padding: 12px 14px; border: 1px solid #334155; border-radius: 8px; background: #0f1117; color: #e2e8f0; font: inherit; font-size: 16px; }
 input:focus-visible { outline: 2px solid #4f8ef7; outline-offset: 2px; }
 input:disabled { opacity: .5; }
-button { font: inherit; cursor: pointer; border-radius: 8px; }
+button { min-height: 44px; font: inherit; cursor: pointer; border-radius: 8px; touch-action: manipulation; }
 button:focus-visible { outline: 2px solid #93c5fd; outline-offset: 4px; }
 .login-button { width: 100%; padding: 13px; border: 0; background: #4f8ef7; color: #fff; font-size: 14px; font-weight: 600; }
 .login-button:hover:not(:disabled) { background: #3b7de8; }
@@ -24,5 +24,11 @@ button:focus-visible { outline: 2px solid #93c5fd; outline-offset: 4px; }
 .session-bar { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 12px; padding: 10px 24px; border-bottom: 1px solid #1e2636; font-size: 12px; color: #94a3b8; }
 .session-bar span { overflow-wrap: anywhere; min-width: 0; }
 .session-bar button { background: #1e2636; color: #e2e8f0; border: 1px solid #334155; padding: 6px 12px; }
-@media (max-width: 480px) { .login-card { padding: 28px 22px; } }
+@media (max-width: 480px) {
+  .login-page { padding: 20px 16px; }
+  .login-card { padding: 28px 22px; }
+  .session-bar { padding: 8px 16px; }
+  .session-bar span { flex: 1; }
+  h1 { font-size: 24px; }
+}
 @media print { .session-bar { display: none; } }
