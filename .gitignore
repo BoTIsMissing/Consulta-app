@@ -4,6 +4,10 @@ backend/node_modules/
 
 # Credenciais — NUNCA sobe pro GitHub
 backend/.env
+backend/*service-account*.json
+backend/*firebase-adminsdk*.json
+backend/*sql-credentials*.json
+backend/private/
 
 # Angular
 dist/

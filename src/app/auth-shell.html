@@ -1,0 +1,49 @@
+@if (auth.loading()) {
+  <main class="login-page" aria-busy="true">
+    <div class="login-card" role="status">Verificando seu acesso…</div>
+  </main>
+} @else if (auth.authorized()) {
+  <header class="session-bar">
+    <span>{{ auth.user()?.email }}</span>
+    <button type="button" (click)="auth.logout()">Sair</button>
+  </header>
+  <app-busca />
+} @else {
+  <main class="login-page">
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="brand"><span aria-hidden="true">⬡</span> Consulta <strong>BR</strong></div>
+      <p class="eyebrow">ACESSO À PLATAFORMA</p>
+      <h1 id="login-title">Entre para continuar</h1>
+      <p class="description">Use o e-mail e a senha fornecidos pelo administrador para acessar as consultas.</p>
+
+      @if (!auth.configured) {
+        <p class="notice" role="status">O acesso está em configuração. Entre em contato com o administrador para saber quando estará disponível.</p>
+      }
+      @if (auth.error()) {
+        <p class="error" role="alert">{{ auth.error() }}</p>
+      }
+      @if (auth.user()) {
+        <p class="account">Conta: {{ auth.user()?.email }}</p>
+      }
+
+      <form #loginForm="ngForm" (ngSubmit)="entrar()" [attr.aria-busy]="auth.busy()">
+        <label for="login-email">E-mail</label>
+        <input id="login-email" name="email" type="email" [(ngModel)]="email"
+          autocomplete="username" autocapitalize="none" spellcheck="false" required email
+          placeholder="seu@email.com" [disabled]="!auth.configured || auth.busy()" />
+        <label for="login-password">Senha</label>
+        <input id="login-password" name="password" type="password" [(ngModel)]="password"
+          autocomplete="current-password" required placeholder="Digite sua senha"
+          [disabled]="!auth.configured || auth.busy()" />
+        <button class="login-button" type="submit"
+          [disabled]="!auth.configured || auth.busy() || !loginForm.valid">
+          {{ auth.busy() ? 'Entrando…' : 'Entrar no painel' }}
+        </button>
+      </form>
+      @if (auth.user()) {
+        <button class="logout-button" type="button" (click)="auth.logout()">Sair desta conta</button>
+      }
+      <p class="footer">Sua sessão é verificada antes de cada consulta.</p>
+    </section>
+  </main>
+}

@@ -1,0 +1,14 @@
+{
+  "firebaseProjectId": "consulta-app-1df95",
+  "googleCredentialsFile": "",
+  "port": 3000,
+  "allowedOrigins": [
+    "http://localhost:4200"
+  ],
+  "sql": {
+    "server": "189.1.174.51",
+    "port": 1433,
+    "database": "BR",
+    "credentialsFile": ""
+  }
+}

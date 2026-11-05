@@ -7,92 +7,153 @@
     </div>
 
     <nav class="nav">
-      <span class="nav-label">Base de dados</span>
+      <span class="nav-label">Buscar por</span>
       <ul>
-        <li
-          *ngFor="let banco of bancos"
-          [class.ativo]="banco === bancoSelecionado"
-          (click)="bancoSelecionado = banco; limpar()"
-        >
-          {{ banco }}
+        <li *ngFor="let t of ['Nome','Nome parcial','CPF','Endereço']" [class.ativo]="tipo === t" (click)="tipo = t; limpar()">
+          {{ t === 'Nome' || t === 'Nome parcial' ? '👤' : t === 'CPF' ? '🪪' : '📍' }} {{ t }}
+        </li>
+      </ul>
+    </nav>
+
+    <nav class="nav" *ngIf="dados">
+      <span class="nav-label">Seções</span>
+      <ul>
+        <li *ngFor="let s of secoes" [class.tem-dados]="temDados(s.key)">
+          {{ s.label }}
+          <span class="count" *ngIf="temDados(s.key)">{{ dados[s.key].length }}</span>
         </li>
       </ul>
     </nav>
 
     <div class="sidebar-footer">
-      <span>SQL Server</span>
+      <span>SQL Server · BR</span>
       <span class="dot online"></span>
     </div>
   </aside>
 
-  <main class="main">
+  <main class="main" id="area-impressao">
 
-    <header class="topo">
+    <header class="topo no-print">
       <h1>Consulta de Pessoas</h1>
-      <p>Busque por <strong>nome</strong> ou <strong>CPF</strong> na base <em>{{ bancoSelecionado }}</em></p>
+      <p>Busque por <strong>{{ tipo }}</strong> e veja todos os dados vinculados</p>
     </header>
 
-    <div class="busca-wrap">
+    <!-- Barra de busca -->
+    <div class="busca-wrap no-print">
       <div class="busca-bar">
         <div class="input-wrap">
-          <span class="input-icon">{{ isCpf ? '🪪' : '🔍' }}</span>
-          <input
-            [(ngModel)]="termo"
-            placeholder="Nome ou CPF..."
-            (keyup.enter)="buscar()"
-            [disabled]="carregando"
-            autofocus
-          />
+          <input [ngModel]="termo" (ngModelChange)="atualizarTermo($event)"
+            [style.text-transform]="buscaPorNome ? 'uppercase' : 'none'"
+            [placeholder]="tipo === 'CPF' ? 'Digite o CPF...' : tipo === 'Endereço' ? 'Rua, bairro, cidade ou CEP...' : tipo === 'Nome parcial' ? 'Ex.: JOÃO SILVA ou J. SILVA...' : 'Digite o nome completo...'"
+            (keyup.enter)="buscar()" [disabled]="carregando" autofocus />
           <button class="btn-limpar" *ngIf="termo" (click)="limpar()">✕</button>
         </div>
         <button class="btn-buscar" (click)="buscar()" [disabled]="carregando || termo.trim().length < 2">
           {{ carregando ? 'Buscando...' : 'Buscar' }}
         </button>
       </div>
-      <p class="busca-hint">Digite ao menos 2 caracteres · Somente números = busca por CPF</p>
+      <p class="busca-hint">Digite ao menos 2 caracteres e pressione Enter</p>
+      <p class="busca-hint" *ngIf="tipo === 'Nome parcial'">Use partes do nome na ordem em que aparecem, mesmo sem todos os sobrenomes. Exibimos até 50 pessoas; refine o nome se necessário.</p>
     </div>
 
-    <!-- Estado: carregando -->
-    <div class="estado" *ngIf="carregando">
+    <!-- Carregando -->
+    <div class="estado no-print" *ngIf="carregando">
       <div class="spinner"></div>
-      <p>Consultando {{ bancoSelecionado }}...</p>
+      <p>Buscando dados...</p>
     </div>
 
-    <!-- Estado: erro -->
-    <div class="estado erro" *ngIf="erro && !carregando">
+    <!-- Erro -->
+    <div class="estado erro no-print" *ngIf="erro && !carregando">
       <span class="estado-icon">⚠</span>
       <p>{{ erro }}</p>
     </div>
 
-    <!-- Estado: sem resultados -->
-    <div class="estado vazio" *ngIf="buscaFeita && !carregando && !erro && resultados.length === 0">
-      <span class="estado-icon">◎</span>
-      <p>Nenhum registro encontrado para <strong>"{{ termo }}"</strong></p>
+    <!-- Candidatos por nome -->
+    <div class="candidatos no-print" *ngIf="candidatos.length > 0 && !carregando">
+      <div class="candidatos-header">
+        <strong>{{ candidatos.length }}</strong> pessoas encontradas - escolha uma:
+      </div>
+      <div class="candidato-card" *ngFor="let c of candidatos" (click)="selecionarPessoa(c.id)">
+        <div class="candidato-nome">{{ c.name }}</div>
+        <div class="candidato-info">
+          <span>🪪 {{ formatarCpf(c.cpf) }}</span>
+          <span>🎂 {{ formatarData(c.birth_date) }}</span>
+          <span>{{ c.genre === 'M' ? '♂ Masculino' : '♀ Feminino' }}</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Resultados -->
-    <div class="resultados" *ngIf="resultados.length > 0 && !carregando">
-      <div class="resultados-header">
-        <span><strong>{{ total }}</strong> registro{{ total !== 1 ? 's' : '' }} encontrado{{ total !== 1 ? 's' : '' }}</span>
-        <span class="badge">{{ bancoSelecionado }}</span>
+    <!-- Resultados de endereço -->
+    <div class="candidatos no-print" *ngIf="enderecos.length > 0 && !carregando">
+      <div class="candidatos-header">
+        <strong>{{ enderecos.length }}</strong> endereços encontrados - clique para ver os dados da pessoa:
+      </div>
+      <div class="candidato-card" *ngFor="let e of enderecos" (click)="selecionarPessoa(e.id)">
+        <div class="candidato-nome">{{ e.name }}</div>
+        <div class="candidato-info">
+          <span>🪪 {{ formatarCpf(e.cpf) }}</span>
+          <span>📍 {{ e.logradouro }}, {{ e.numero }} {{ e.complemento }} - {{ e.bairro }}, {{ e.cidade }}/{{ e.uf }}</span>
+        </div>
+        <div class="mapa-wrap no-print" *ngIf="mapaUrl(e.latitude, e.longitude) as url"
+          (click)="$event.stopPropagation()">
+          <iframe class="mapa-embed" [src]="url" title="Localização do endereço no Google Maps"
+            loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultados completos -->
+    <div class="resultados" *ngIf="dados && !carregando">
+
+      <!-- Toolbar -->
+      <div class="toolbar no-print">
+        <button class="btn-acao" (click)="exportarPdf()">🖨 Imprimir / Exportar PDF</button>
       </div>
 
-      <div class="tabela-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th *ngFor="let col of colunas">{{ col }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let row of resultados">
-              <td *ngFor="let col of colunas">{{ row[col] ?? '—' }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Seções -->
+      <div class="secao" *ngFor="let s of secoes">
+        <div class="secao-header" *ngIf="temDados(s.key)">
+          <span class="secao-titulo">{{ s.label }}</span>
+          <span class="badge">{{ dados[s.key].length }} registro{{ dados[s.key].length !== 1 ? 's' : '' }}</span>
+        </div>
+
+        <div class="cards" *ngIf="temDados(s.key)">
+          <div class="card" *ngFor="let row of dados[s.key]">
+            <div class="card-linha" *ngFor="let col of keys(row, s.key)">
+              <span class="card-label">{{ col === 'relative' ? 'Parentesco' : col }}</span>
+              <span class="card-valor">
+                {{ temValor(row[col]) ? formatarValor(col, row[col]) : 'Não informado' }}
+                <button class="btn-copiar no-print" (click)="copiar(formatarValor(col, row[col]), col + row['id'])"
+                  [class.copiado]="copiado === col + row['id']">
+                  {{ copiado === col + row['id'] ? '✓' : '⎘' }}
+                </button>
+              </span>
+            </div>
+            <!-- Mapa incorporado para endereços -->
+            <ng-container *ngIf="s.key === 'address'">
+              <div class="mapa-wrap no-print" *ngIf="mapaUrl(row['latitude'], row['longitude']) as url">
+                <iframe class="mapa-embed" [src]="url" title="Localização do endereço no Google Maps"
+                  loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+
+
       </div>
 
-      <p class="tabela-nota" *ngIf="total === 100">Exibindo os primeiros 100 resultados. Refine a busca para mais precisão.</p>
+      <!-- Notas -->
+      <div class="secao notas-secao no-print">
+        <div class="secao-header">
+          <span class="secao-titulo">📝 Notas</span>
+        </div>
+        <textarea class="nota-input" [(ngModel)]="notaTexto" placeholder="Adicione uma anotação sobre esta consulta..."></textarea>
+        <button class="btn-acao" (click)="salvarNota()">Salvar nota</button>
+        <div class="nota-salva" *ngIf="notaSalva">
+          <strong>Nota salva:</strong> {{ notaSalva }}
+        </div>
+      </div>
+
     </div>
 
   </main>

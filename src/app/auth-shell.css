@@ -1,0 +1,28 @@
+:host { display: block; min-height: 100vh; background: #0f1117; color: #e2e8f0; font-family: 'Inter', 'Segoe UI', sans-serif; }
+.login-page { min-height: 100dvh; display: grid; place-items: center; padding: 24px; box-sizing: border-box; background: radial-gradient(ellipse at top, #172440 0, #0f1117 65%); }
+.login-card { box-sizing: border-box; width: 100%; max-width: 420px; background: #161b27; border: 1px solid #263249; border-radius: 16px; padding: 36px; box-shadow: 0 24px 64px #0003; }
+.brand { display: flex; align-items: center; gap: 8px; margin-bottom: 36px; font-size: 19px; }
+.brand span { color: #4f8ef7; font-size: 32px; }
+.eyebrow { color: #82acf2; font-size: 10px; letter-spacing: .14em; }
+h1 { font-size: 26px; margin: 12px 0; }
+.description { color: #94a3b8; font-size: 14px; line-height: 1.6; margin-bottom: 28px; }
+label { display: block; margin-bottom: 8px; font-size: 13px; color: #cbd5e1; }
+input { box-sizing: border-box; width: 100%; margin-bottom: 20px; padding: 12px 14px; border: 1px solid #334155; border-radius: 8px; background: #0f1117; color: #e2e8f0; font: inherit; font-size: 14px; }
+input:focus-visible { outline: 2px solid #4f8ef7; outline-offset: 2px; }
+input:disabled { opacity: .5; }
+button { font: inherit; cursor: pointer; border-radius: 8px; }
+button:focus-visible { outline: 2px solid #93c5fd; outline-offset: 4px; }
+.login-button { width: 100%; padding: 13px; border: 0; background: #4f8ef7; color: #fff; font-size: 14px; font-weight: 600; }
+.login-button:hover:not(:disabled) { background: #3b7de8; }
+.login-button:disabled { opacity: .5; cursor: not-allowed; }
+.notice, .error { border-radius: 8px; padding: 12px; font-size: 13px; line-height: 1.6; }
+.notice { color: #cbd5e1; background: #1e293b; }
+.error { color: #fecaca; background: #4b2028; }
+.account { overflow-wrap: anywhere; font-size: 12px; color: #94a3b8; }
+.footer { text-align: center; color: #94a3b8; font-size: 11px; line-height: 1.6; margin: 24px 0 0; }
+.logout-button { display: block; margin: 12px auto 0; padding: 8px; background: transparent; color: #94a3b8; border: 0; font-size: 12px; }
+.session-bar { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 12px; padding: 10px 24px; border-bottom: 1px solid #1e2636; font-size: 12px; color: #94a3b8; }
+.session-bar span { overflow-wrap: anywhere; min-width: 0; }
+.session-bar button { background: #1e2636; color: #e2e8f0; border: 1px solid #334155; padding: 6px 12px; }
+@media (max-width: 480px) { .login-card { padding: 28px 22px; } }
+@media print { .session-bar { display: none; } }
