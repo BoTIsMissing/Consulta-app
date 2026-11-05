@@ -67,6 +67,10 @@ Referência: [endereços de saída do Render](https://render.com/docs/outbound-i
 
 ## Frontend no GitHub Pages
 
+O workflow `.github/workflows/deploy-pages.yml` publica o Angular a cada push na branch `main`, incluindo somente os arquivos compilados do frontend. No repositório GitHub, abra **Settings → Pages → Build and deployment → Source** e selecione **GitHub Actions** antes de executar a publicação. Após enviar o workflow ao GitHub, acompanhe a execução na aba **Actions**; também é possível executá-lo manualmente pelo botão **Run workflow**.
+
+O endereço esperado para este repositório é https://botismissing.github.io/Consulta-app/. O workflow utiliza o caminho base `/Consulta-app/`; ajuste-o se renomear o repositório ou configurar um domínio próprio. O endereço do Render é o backend; a tela de login fica no Pages.
+
 1. No Firebase, registre um aplicativo Web do projeto `consulta-app-1df95`.
 2. Preencha `apiKey`, `authDomain`, `projectId` e `appId` em `src/app/config.ts` com a configuração pública desse aplicativo.
 3. Depois de criar o serviço no Render, altere `apiUrl` no mesmo arquivo para a URL HTTPS real da API, incluindo `/api`, por exemplo `https://consulta-api.onrender.com/api`. A URL do exemplo deve ser substituída pela URL gerada para seu serviço.
