@@ -16,12 +16,12 @@ function createDatabaseConfigLoader({ settings, readCredentials }) {
         if (typeof settings.server !== 'string' || !settings.server.trim()
           || !Number.isInteger(settings.port) || settings.port < 1 || settings.port > 65535
           || typeof settings.database !== 'string' || !settings.database.trim()) {
-          throw new Error('Invalid database settings');
+          throw Object.assign(new Error('Invalid database settings'), { reason: 'INVALID_SETTINGS' });
         }
         const credentials = JSON.parse(await readCredentials());
         if (!credentials || typeof credentials.user !== 'string' || !credentials.user.trim()
           || typeof credentials.password !== 'string' || !credentials.password) {
-          throw new Error('Invalid database credentials');
+          throw Object.assign(new Error('Invalid database credentials'), { reason: 'INVALID_FIELDS' });
         }
         return {
           server: settings.server.trim(), port: settings.port, database: settings.database,
@@ -29,10 +29,13 @@ function createDatabaseConfigLoader({ settings, readCredentials }) {
           options: { encrypt: true, trustServerCertificate: false, enableArithAbort: true },
           requestTimeout: 60000, connectionTimeout: 30000,
         };
-      }).catch(() => {
+      }).catch(cause => {
         pending = undefined;
         const error = new Error('Não foi possível carregar a configuração segura do banco.');
         error.code = 'SQL_CONFIGURATION_ERROR';
+        error.reason = cause.reason || (cause instanceof SyntaxError ? 'INVALID_JSON'
+          : cause.code === 'ENOENT' ? 'FILE_NOT_FOUND'
+          : cause.code === 'EACCES' || cause.code === 'EPERM' ? 'FILE_PERMISSION' : 'UNKNOWN');
         throw error;
       });
     }
@@ -44,7 +47,7 @@ const getDatabaseConfig = createDatabaseConfigLoader({
   settings: runtimeConfig.sql,
   async readCredentials() {
     const filename = getSqlCredentialsPath();
-    if (!filename) throw new Error('SQL credentials file not configured');
+    if (!filename) throw Object.assign(new Error('SQL credentials file not configured'), { reason: 'FILE_NOT_CONFIGURED' });
     return readFile(filename, 'utf8');
   },
 });

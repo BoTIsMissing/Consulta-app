@@ -1,5 +1,6 @@
 const sql = require('mssql');
 const { getDatabaseConfig } = require('./database-config');
+const { logSqlError } = require('./sql-diagnostics');
 
 async function checkSqlConnection() {
   const config = await getDatabaseConfig();
@@ -16,9 +17,7 @@ if (require.main === module) {
   checkSqlConnection().then(() => {
     console.log('Arquivo secreto e conexão SQL verificados. Nenhum dado pessoal foi consultado.');
   }).catch(error => {
-    console.error(error.code === 'SQL_CONFIGURATION_ERROR'
-      ? 'Falha ao carregar as credenciais SQL. Confira o arquivo secreto sql-credentials.json e seu conteúdo.'
-      : 'Falha na conexão SQL. Confira IP, porta, acesso de rede, credenciais e certificado TLS do servidor.');
+    logSqlError(error);
     process.exitCode = 1;
   });
 }

@@ -4,6 +4,7 @@ const cors = require('cors');
 const { requireAuth } = require('./auth');
 const runtimeConfig = require('./runtime-config.json');
 const { getDatabaseConfig } = require('./database-config');
+const { logSqlError } = require('./sql-diagnostics');
 
 const app = express();
 const allowedOrigins = process.env.ALLOWED_ORIGINS
@@ -18,7 +19,7 @@ app.use('/api', requireAuth, api);
 api.get('/auth/session', (req, res) => res.json({ email: req.user.email }));
 
 async function handleDatabaseError(res, error) {
-  console.error('Falha na consulta SQL.');
+  logSqlError(error);
   await sql.close().catch(() => {});
   return res.status(error.code === 'SQL_CONFIGURATION_ERROR' ? 503 : 500)
     .json({ erro: 'Não foi possível consultar os dados. Tente novamente mais tarde.' });
