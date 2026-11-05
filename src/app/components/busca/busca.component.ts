@@ -9,7 +9,7 @@ import { ConsultaService, Candidato } from '../../services/consulta.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './busca.component.html',
-  styleUrls: ['./busca.component.css'],
+  styleUrls: ['./busca.component.scss'],
 })
 export class BuscaComponent {
   termo = '';

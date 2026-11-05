@@ -126,6 +126,12 @@ test('todas as rotas de consulta e sessão exigem autenticação via HTTP', asyn
     const health = await fetch(`http://127.0.0.1:${server.address().port}/healthz`);
     assert.equal(health.status, 200);
     assert.deepEqual(await health.json(), { status: 'ok' });
+    const root = await fetch(`http://127.0.0.1:${server.address().port}/`);
+    assert.equal(root.status, 200);
+    assert.deepEqual(await root.json(), { service: 'Consulta BR API', status: 'ok' });
+    const missing = await fetch(`http://127.0.0.1:${server.address().port}/missing`);
+    assert.equal(missing.status, 404);
+    assert.deepEqual(await missing.json(), { erro: 'Rota não encontrada.' });
     for (const route of ['/buscar-nome?termo=TESTE', '/buscar-cpf?termo=01234567890',
       '/buscar-id?id=1', '/buscar-endereco?termo=TESTE', '/auth/session']) {
       const response = await fetch(`http://127.0.0.1:${server.address().port}/api${route}`);

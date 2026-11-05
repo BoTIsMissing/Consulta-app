@@ -1,5 +1,3 @@
-const path = require('node:path');
-
 const express = require('express');
 const sql = require('mssql');
 const cors = require('cors');
@@ -156,9 +154,8 @@ api.get('/buscar-endereco', async (req, res) => {
 
 app.use('/api', (req, res) => res.status(404).json({ erro: 'Rota não encontrada.' }));
 
-const frontend = path.join(__dirname, '..', 'dist', 'consulta-app-new', 'browser');
-app.use(express.static(frontend));
-app.get('*', (req, res) => res.sendFile(path.join(frontend, 'index.html')));
+app.get('/', (req, res) => res.json({ service: 'Consulta BR API', status: 'ok' }));
+app.use((req, res) => res.status(404).json({ erro: 'Rota não encontrada.' }));
 
 if (require.main === module) {
   const port = process.env.PORT || runtimeConfig.port;

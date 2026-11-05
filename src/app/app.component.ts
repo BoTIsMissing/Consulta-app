@@ -8,7 +8,7 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [BuscaComponent, FormsModule],
   templateUrl: './auth-shell.html',
-  styleUrl: './auth-shell.css',
+  styleUrl: './auth-shell.scss',
 })
 export class AppComponent {
   email = '';

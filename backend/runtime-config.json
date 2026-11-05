@@ -3,7 +3,8 @@
   "googleCredentialsFile": "",
   "port": 3000,
   "allowedOrigins": [
-    "http://localhost:4200"
+    "http://localhost:4200",
+    "https://botismissing.github.io"
   ],
   "sql": {
     "server": "189.1.174.51",
