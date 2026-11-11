@@ -39,7 +39,7 @@
   <main class="main" id="area-impressao">
 
     <header class="topo no-print">
-      <h1>{{ tipo === 'Placa' ? 'Consulta de Veículos' : 'Consulta de Pessoas' }}</h1>
+      <h1>{{ tipo === 'Placa' ? 'Consulta de Veículos' : tipo === 'CNPJ' ? 'Consulta de Empresas' : 'Consulta de Pessoas' }}</h1>
       <p>Busque por <strong>{{ tipo }}</strong> e veja todos os dados vinculados</p>
     </header>
 
@@ -61,9 +61,9 @@
           {{ carregando ? 'Buscando...' : 'Buscar' }}
         </button>
       </div>
-      <p class="busca-hint">{{ tipo === 'Placa' ? 'Digite a placa completa, com ou sem hífen, e pressione Enter. Até 50 registros por consulta.' : 'Digite ao menos 2 caracteres e pressione Enter' }}</p>
+      <p class="busca-hint">{{ tipo === 'Placa' ? 'Digite a placa completa, com ou sem hífen, e pressione Enter. Até 50 registros por consulta.' : tipo === 'CNPJ' ? 'Digite o CNPJ completo e pressione Enter' : 'Digite ao menos 2 caracteres e pressione Enter' }}</p>
       <p class="busca-hint" *ngIf="tipo === 'Nome parcial'">Use partes do nome na ordem em que aparecem, mesmo sem todos os sobrenomes. Exibimos até 50 pessoas; refine o nome se necessário.</p>
-      <p class="busca-hint" *ngIf="tipo === 'CNPJ'">Informe os 14 dígitos, com ou sem pontuação. Busca nos campos CNPJ e CNPJ relacionamento dos registros PEP. Até 50 pessoas por consulta.</p>
+      <p class="busca-hint" *ngIf="tipo === 'CNPJ'">Informe os 14 dígitos, com ou sem pontuação. Consulta a empresa, o CNES e pessoas vinculadas em registros PEP. Até 50 registros por seção.</p>
     </div>
 
     <!-- Carregando -->
@@ -81,7 +81,7 @@
     <!-- Candidatos por nome -->
     <div class="candidatos no-print" *ngIf="candidatos.length > 0 && !carregando">
       <div class="candidatos-header">
-        <strong>{{ candidatos.length }}</strong> pessoas encontradas - escolha uma:
+        <strong>{{ candidatos.length }}</strong> {{ tipo === 'CNPJ' ? 'pessoas vinculadas em registros PEP — escolha uma:' : 'pessoas encontradas - escolha uma:' }}
       </div>
       <div class="candidato-card" *ngFor="let c of candidatos" (click)="selecionarPessoa(c.id)">
         <div class="candidato-nome">{{ c.name }}</div>

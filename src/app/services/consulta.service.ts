@@ -20,6 +20,18 @@ export interface RegistroPep {
   descricao_profissao: string | null;
 }
 
+export type DadosEmpresa = Record<
+  'company' | 'cnes' | 'company_profile' | 'company_address' | 'company_email' |
+  'company_fone' | 'company_partners' | 'company_representatives' | 'company_status' | 'company_simples',
+  Record<string, unknown>[]
+>;
+
+export interface ResultadoCnpj {
+  total: number;
+  candidatos: Candidato[];
+  empresa: DadosEmpresa | null;
+}
+
 export interface Veiculo {
   id: string;
   idvehicles: string | null;
@@ -59,8 +71,8 @@ export class ConsultaService {
     return this.http.post<{ total: number; veiculos: Veiculo[] }>(`${this.apiUrl}/buscar-placa`, { termo });
   }
 
-  buscarCnpj(termo: string): Observable<{ total: number; candidatos: Candidato[] }> {
-    return this.http.post<{ total: number; candidatos: Candidato[] }>(`${this.apiUrl}/buscar-cnpj`, { termo });
+  buscarCnpj(termo: string): Observable<ResultadoCnpj> {
+    return this.http.post<ResultadoCnpj>(`${this.apiUrl}/buscar-cnpj`, { termo });
   }
 
   buscarPorId(id: string | number): Observable<ResultadoCompleto> {

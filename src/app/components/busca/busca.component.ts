@@ -2,7 +2,7 @@ import { Component, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { ConsultaService, Candidato } from '../../services/consulta.service';
+import { ConsultaService, Candidato, DadosEmpresa } from '../../services/consulta.service';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -23,6 +23,7 @@ export class BuscaComponent implements OnDestroy {
   candidatos: Candidato[] = [];
   enderecos: any[] = [];
   dados: any = null;
+  private dadosEmpresa: DadosEmpresa | null = null;
   carregando = false;
   erro = '';
   buscaFeita = false;
@@ -42,7 +43,24 @@ export class BuscaComponent implements OnDestroy {
 
   private secoesVeiculos = [{ key: 'vehicles', label: 'Veículos' }];
 
+  private secoesEmpresas = [
+    { key: 'company', label: 'Empresa' },
+    { key: 'company_profile', label: 'Perfil da empresa' },
+    { key: 'company_address', label: 'Endereços da empresa' },
+    { key: 'company_email', label: 'E-mails da empresa' },
+    { key: 'company_fone', label: 'Telefones da empresa' },
+    { key: 'company_partners', label: 'Sócios' },
+    { key: 'company_representatives', label: 'Representantes legais' },
+    { key: 'company_status', label: 'Situação da empresa' },
+    { key: 'company_simples', label: 'Simples / MEI' },
+    { key: 'cnes', label: 'CNES' },
+  ];
+
   get secoes() {
+    if (this.tipo === 'CNPJ') return [
+      ...this.secoesEmpresas,
+      ...(this.dados?.people?.length ? this.secoesPessoas : []),
+    ];
     return this.tipo === 'Placa' ? this.secoesVeiculos : this.secoesPessoas;
   }
 
@@ -68,6 +86,7 @@ export class BuscaComponent implements OnDestroy {
     this.erro = '';
     this.buscaFeita = false;
     this.dados = null;
+    this.dadosEmpresa = null;
     this.mapas.clear();
     this.candidatos = [];
     this.enderecos = [];
@@ -81,6 +100,24 @@ export class BuscaComponent implements OnDestroy {
           this.buscaFeita = true;
           if (res.total === 0) this.erro = 'Nenhum veículo encontrado para esta placa.';
           else this.dados = { vehicles: res.veiculos };
+          this.cdr.detectChanges();
+        },
+        error: (err) => { this.handleErro(err); },
+      });
+    } else if (this.tipo === 'CNPJ') {
+      this.consultaService.buscarCnpj(this.termo).pipe(takeUntil(this.stopRequests)).subscribe({
+        next: (res) => {
+          this.carregando = false;
+          this.buscaFeita = true;
+          this.dadosEmpresa = res.empresa || null;
+          this.dados = this.dadosEmpresa;
+          if (res.total === 0 && !this.dadosEmpresa) {
+            this.erro = 'Nenhuma empresa, CNES ou pessoa encontrada para este CNPJ.';
+          } else if (res.total === 1) {
+            this.selecionarPessoa(res.candidatos[0].id);
+          } else {
+            this.candidatos = res.candidatos;
+          }
           this.cdr.detectChanges();
         },
         error: (err) => { this.handleErro(err); },
@@ -106,15 +143,12 @@ export class BuscaComponent implements OnDestroy {
         error: (err) => { this.handleErro(err); },
       });
     } else {
-      const consulta = this.tipo === 'CNPJ'
-        ? this.consultaService.buscarCnpj(this.termo)
-        : this.consultaService.buscarNome(this.termo, this.tipo === 'Nome parcial');
-      consulta.pipe(takeUntil(this.stopRequests)).subscribe({
+      this.consultaService.buscarNome(this.termo, this.tipo === 'Nome parcial').pipe(takeUntil(this.stopRequests)).subscribe({
         next: (res) => {
           this.carregando = false;
           this.buscaFeita = true;
           if (res.total === 0) {
-            this.erro = this.tipo === 'CNPJ' ? 'Nenhuma pessoa vinculada a este CNPJ nos registros PEP.' : 'Nenhum registro encontrado.';
+            this.erro = 'Nenhum registro encontrado.';
           } else if (res.total === 1) {
             this.selecionarPessoa(res.candidatos[0].id);
           } else {
@@ -131,7 +165,7 @@ export class BuscaComponent implements OnDestroy {
     this.stopRequests.next();
     this.carregando = true;
     this.candidatos = [];
-    this.dados = null;
+    this.dados = this.tipo === 'CNPJ' ? this.dadosEmpresa : null;
     this.mapas.clear();
     this.notaSalva = '';
     this.notaTexto = '';
@@ -140,7 +174,7 @@ export class BuscaComponent implements OnDestroy {
     this.consultaService.buscarPorId(id).pipe(takeUntil(this.stopRequests)).subscribe({
       next: (res) => {
         this.carregando = false;
-        this.dados = res.encontrado ? res.dados : null;
+        this.dados = res.encontrado ? { ...this.dadosEmpresa, ...res.dados } : this.dadosEmpresa;
         if (!res.encontrado) this.erro = 'Erro ao carregar dados.';
         this.cdr.detectChanges();
       },
@@ -160,6 +194,7 @@ export class BuscaComponent implements OnDestroy {
     this.carregando = false;
     this.termo = '';
     this.dados = null;
+    this.dadosEmpresa = null;
     this.mapas.clear();
     this.candidatos = [];
     this.enderecos = [];
@@ -224,11 +259,12 @@ export class BuscaComponent implements OnDestroy {
 
   formatarValor(col: string, valor: any): string {
     if (valor === null || valor === undefined || valor === '' || valor === 'None') return '';
-    if (col === 'cpf' || col === 'cpf6') return this.formatarCpf(String(valor));
-    if (col === 'cnpj' || col === 'cnpj_relacionamento') {
+    if (col === 'cpf' || col === 'cpf6' || col === 'cpf_representante') return this.formatarCpf(String(valor));
+    if (col === 'doc_partners' && /^\d{11}$/.test(String(valor))) return this.formatarCpf(String(valor));
+    if (col === 'cnpj' || col === 'cnpj_relacionamento' || col === 'doc_partners') {
       return String(valor).replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
     }
-    if (col === 'dt_inicio' || col === 'dt_carencia') return this.formatarData(String(valor));
+    if (col.startsWith('dt_')) return this.formatarData(String(valor));
     if (col.includes('date') || col.includes('nascimento') || col === 'birth_date')
       return this.formatarData(String(valor));
     return String(valor);
@@ -248,6 +284,29 @@ export class BuscaComponent implements OnDestroy {
 
   rotuloCampo(col: string, secao: string): string {
     if (col === 'relative') return 'Parentesco';
+    if (secao === 'company' || secao === 'cnes' || secao.startsWith('company_')) {
+      const rotulos: Record<string, string> = {
+        cnpj: 'CNPJ', cnpj8: 'Raiz do CNPJ', name1: 'Nome 1', name2: 'Nome 2',
+        dt_information: 'Data da informação', dt_insert: 'Data de inclusão', dt_edit: 'Data de atualização',
+        origin: 'Origem', cnes: 'CNES', ty_company: 'Tipo de empresa', birth_date: 'Data de abertura',
+        legal_nature: 'Natureza jurídica (código)', matriz: 'Indicador de matriz', share_capital: 'Capital social',
+        size: 'Porte', tp_cnae: 'Tipo de CNAE', cnae: 'CNAE', cnas2: 'CNAEs adicionais',
+        employees_range: 'Faixa de funcionários (código)', billing_range: 'Faixa de faturamento',
+        endereco: 'Endereço', tipo_logradouro: 'Tipo de logradouro', logradouro: 'Logradouro',
+        numero: 'Número', complemento: 'Complemento', bairro: 'Bairro', cidade: 'Cidade',
+        uf: 'UF', cep: 'CEP', pais: 'País', cidade_exterior: 'Cidade no exterior',
+        email: 'E-mail', telefone: 'Telefone', ddd: 'DDD', fone: 'Número', type_fone: 'Tipo de telefone (código)',
+        type_partners: 'Tipo de vínculo', doc_partners: 'Documento do sócio', name: 'Nome', dt_entrada: 'Data de entrada',
+        qualificacao: 'Qualificação', participacao: 'Participação', cpf_representante: 'CPF do representante',
+        nome_representante: 'Nome do representante', qualificacao_representante: 'Qualificação do representante',
+        cidade_pais: 'Cidade / país', qualificador_cod: 'Qualificação (código)', situacao: 'Situação',
+        situacao_motivo: 'Motivo da situação', dt_situacao: 'Data da situação', dt_inicio_atividade: 'Início da atividade',
+        situacao_especial: 'Situação especial', dt_situacao_especial: 'Data da situação especial',
+        simples: 'Simples', dt_simples: 'Data do Simples', dt_simples_exclusao: 'Exclusão do Simples',
+        mei: 'MEI', dt_mei: 'Data do MEI', dt_mei_exclusao: 'Exclusão do MEI',
+      };
+      return rotulos[col] || col;
+    }
     if (secao === 'pep') {
       const rotulos: Record<string, string> = {
         cnpj: 'CNPJ', cnpj_relacionamento: 'CNPJ relacionamento',

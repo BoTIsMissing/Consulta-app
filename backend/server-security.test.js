@@ -5,7 +5,7 @@ const { createApp } = require('./server');
 const { createAuthMiddleware } = require('./auth');
 
 const origin = 'https://botismissing.github.io';
-async function start({ recordset = [], ...options } = {}) {
+async function start({ recordset = [], respond, ...options } = {}) {
   const inputs = [];
   const queries = [];
   let databaseCalls = 0;
@@ -13,7 +13,11 @@ async function start({ recordset = [], ...options } = {}) {
     request() {
       return {
         input(key, type, value) { inputs.push({ key, value }); return this; },
-        async query(query) { queries.push(query); return { recordset }; },
+        async query(query) {
+          queries.push(query);
+          return { recordset: respond ? respond(query)
+            : /FROM BR\.\.(company|c_cnes)\b/.test(query) ? [] : recordset };
+        },
       };
     },
     async close() { assert.fail('Uma requisição não deve fechar o pool compartilhado'); },
@@ -190,13 +194,13 @@ test('CNPJ com e sem máscara preserva zeros e pesquisa ambos os campos por par�
     for (const termo of ['00123456000100', '00.123.456/0001-00', ' 00.123.456/0001-00 ']) {
       const response = await app.request('/api/buscar-cnpj', { termo });
       assert.equal(response.status, 200);
-      assert.deepEqual(await response.json(), { total: 0, candidatos: [] });
+      assert.deepEqual(await response.json(), { total: 0, candidatos: [], empresa: null });
       assert.match(response.headers.get('cache-control'), /no-store/);
       assert.deepEqual(app.inputs.slice(-2), [
         { key: 'cnpj', value: '00123456000100' },
         { key: 'formattedCnpj', value: '00.123.456/0001-00' },
       ]);
-      const query = app.queries.at(-1);
+      const query = app.queries.find(query => query.includes('pep.cnpj'));
       assert.match(query, /EXISTS/);
       assert.match(query, /pep.id = p.id/);
       assert.match(query, /pep.cnpj IN \(@cnpj, @formattedCnpj\)/);
@@ -212,7 +216,25 @@ test('busca por CNPJ retorna candidatos com identificadores textuais', async () 
   try {
     const response = await app.request('/api/buscar-cnpj', { termo: '00000000000000' });
     assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), { total: 1, candidatos });
+    assert.deepEqual(await response.json(), { total: 1, candidatos, empresa: null });
+  } finally { await app.close(); }
+});
+
+test('busca por CNPJ retorna empresa e CNES mesmo sem pessoas em PEP', async () => {
+  const company = [{ id: '9007199254740993', cnpj: '00000000000000', name1: 'EMPRESA FICTICIA' }];
+  const cnes = [{ cnpj: '00000000000000', cnes: '0000000' }];
+  const app = await start({ respond: query => query.includes('FROM BR..company') ? company
+    : query.includes('FROM BR..c_cnes') ? cnes : [] });
+  try {
+    const response = await app.request('/api/buscar-cnpj', { termo: '00000000000000' });
+    assert.equal(response.status, 200);
+    const result = await response.json();
+    assert.equal(result.total, 0);
+    assert.deepEqual(result.candidatos, []);
+    assert.deepEqual(result.empresa.company, company);
+    assert.deepEqual(result.empresa.cnes, cnes);
+    assert.equal(app.inputs.filter(input => input.key === 'companyId0').every(input => input.value === company[0].id), true);
+    assert.equal(app.queries.length, 11);
   } finally { await app.close(); }
 });
 

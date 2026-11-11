@@ -12,7 +12,11 @@ Sem índice em `plate`, a consulta pode demorar mesmo com o limite de resultados
 
 ## Registros PEP / CNPJ
 
-Selecione **CNPJ** no menu para localizar pessoas com registros correspondentes em `cnpj` ou `cnpj_relacionamento` de `p_pep`. Aceita os 14 dígitos com ou sem máscara. A API autenticada `POST /api/buscar-cnpj`, com JSON `{ "termo": "00123456000100" }`, retorna até 50 pessoas sem duplicá-las quando há vários registros correspondentes. Uma pessoa é aberta diretamente; com várias, escolha na lista. A pesquisa não consulta um cadastro completo de empresas.
+Selecione **CNPJ** no menu para consultar a empresa em `BR..company`, o CNES em `BR..c_cnes` e pessoas com registros correspondentes em `cnpj` ou `cnpj_relacionamento` de `p_pep`. Aceita os 14 dígitos com ou sem máscara. A busca usa o CNPJ completo, sem ampliar para outros estabelecimentos com o mesmo `cnpj8`.
+
+A API autenticada `POST /api/buscar-cnpj`, com JSON `{ "termo": "00123456000100" }`, retorna `empresa` com os dados cadastrais e as seções disponíveis, além de `total` e `candidatos` para as pessoas vinculadas em PEP. Se houver uma pessoa, ela é aberta diretamente; com várias, escolha na lista. A empresa permanece visível ao selecionar uma pessoa. Empresa e CNES são exibidos mesmo sem correspondência em PEP; um CNES isolado também é preservado.
+
+Os detalhes da empresa são filtrados pelo ID de `company` em `c_profile`, `c_address`, `c_email`, `c_fone`, `c_partners`, `c_legal_representative`, `c_status` e `c_simples`. A ligação por ID foi compatível nas amostras de 20 registros por tabela; isso não equivale a uma chave estrangeira declarada. Os códigos de classificação são mantidos como vieram da origem, sem relacionamentos adicionais com catálogos não confirmados. Há limite de 50 registros por seção; sem ordenação nos detalhes, retornam até 50 linhas arbitrárias quando esse limite é excedido. O usuário SQL no Render precisa de leitura nessas tabelas e em `company` e `c_cnes`. Publique o backend antes do frontend.
 
 As consultas de pessoas também retornam os registros de `BR..p_pep`, filtrados pelo `id` da pessoa. A seção mostra `cnpj`, `cnpj_relacionamento`, `dt_inicio`, `dt_carencia` e `descricao_profissao` quando preenchidos. CNPJs numéricos com 14 dígitos recebem máscara visual, preservando zeros iniciais; outros valores permanecem como vieram do banco. Esses registros não comprovam propriedade ou participação societária. O backend precisa de permissão de leitura nessa tabela.
 
