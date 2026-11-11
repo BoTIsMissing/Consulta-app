@@ -5,7 +5,8 @@ const { requireAuth } = require('./auth');
 const runtimeConfig = require('./runtime-config.json');
 const { getDatabasePool, closeDatabasePool } = require('./database-pool');
 const { securityHeaders, noStore, createRequestLimits, createQueryGate } = require('./security');
-const { bodyFields, searchText, cpfText, personId, escapeLike, nameSearch } = require('./input-validation');
+const { bodyFields, searchText, cpfText, plateText, personId, escapeLike, nameSearch } = require('./input-validation');
+const { vehicleQuery } = require('./vehicle-query');
 const { logSqlError } = require('./sql-diagnostics');
 
 function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
@@ -76,10 +77,12 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
         `),
         consultar('SELECT * FROM p_credit    WHERE id = @id'),
         consultar('SELECT * FROM p_status    WHERE id = @id'),
+        consultar(`SELECT cnpj, cnpj_relacionamento, dt_inicio, dt_carencia, descricao_profissao
+          FROM BR..p_pep WHERE id = @id`),
       ]);
     const failed = sections.find(section => section.status === 'rejected');
     if (failed) throw failed.reason;
-    const [people, profile, address, email, fone, connected, credit, status] = sections.map(section => section.value);
+    const [people, profile, address, email, fone, connected, credit, status, pep] = sections.map(section => section.value);
     return {
       people:    people.recordset,
       profile:   profile.recordset,
@@ -89,6 +92,7 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
       connected: connected.recordset,
       credit:    credit.recordset,
       status:    status.recordset,
+      pep:       pep.recordset,
     };
   }
 
@@ -124,6 +128,21 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
       }
       const dados = await buscarTodosPorId(pool, idResult.recordset[0].id);
       res.json({ encontrado: true, dados });
+    } catch (err) {
+      await handleDatabaseError(res, err);
+    }
+  }));
+
+  // Busca exata por placa, incluindo o formato antigo com hífen.
+  api.post('/buscar-placa', guardQuery(async (req, res) => {
+    try {
+      const plate = plateText(bodyFields(req.body, ['termo']).termo);
+      const pool = await getPool();
+      const result = await pool.request()
+        .input('plate', sql.VarChar(50), plate)
+        .input('formattedPlate', sql.VarChar(50), `${plate.slice(0, 3)}-${plate.slice(3)}`)
+        .query(vehicleQuery);
+      res.json({ total: result.recordset.length, veiculos: result.recordset });
     } catch (err) {
       await handleDatabaseError(res, err);
     }

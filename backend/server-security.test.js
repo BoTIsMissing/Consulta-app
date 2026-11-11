@@ -5,7 +5,7 @@ const { createApp } = require('./server');
 const { createAuthMiddleware } = require('./auth');
 
 const origin = 'https://botismissing.github.io';
-async function start(options = {}) {
+async function start({ recordset = [], ...options } = {}) {
   const inputs = [];
   const queries = [];
   let databaseCalls = 0;
@@ -13,7 +13,7 @@ async function start(options = {}) {
     request() {
       return {
         input(key, type, value) { inputs.push({ key, value }); return this; },
-        async query(query) { queries.push(query); return { recordset: [] }; },
+        async query(query) { queries.push(query); return { recordset }; },
       };
     },
     async close() { assert.fail('Uma requisição não deve fechar o pool compartilhado'); },
@@ -117,6 +117,58 @@ test('entrada SQL é tratada como parâmetro e curingas de endereço são litera
   } finally { await app.close(); }
 });
 
+test('placa exige conta liberada e POST, sem consultar o banco antes da autorização', async () => {
+  const app = await start();
+  try {
+    for (const [token, status] of [['invalid', 401], ['unapproved', 403]]) {
+      assert.equal((await app.request('/api/buscar-placa', { termo: 'ABC1D23' }, { token })).status, status);
+    }
+    assert.equal((await app.request('/api/buscar-placa', undefined, { method: 'GET' })).status, 405);
+    assert.equal(app.databaseCalls(), 0);
+  } finally { await app.close(); }
+});
+
+test('placa inválida não chega ao SQL, incluindo tentativas de injeção e curingas', async () => {
+  const app = await start();
+  try {
+    for (const termo of [undefined, null, 1234567, {}, 'ABC', 'ABC12345', 'ABC-DEFG', 'ABC%123', "ABC1234' OR 1=1--", 'ABC1234\nXYZ']) {
+      assert.equal((await app.request('/api/buscar-placa', { termo })).status, 400);
+    }
+    assert.equal((await app.request('/api/buscar-placa', { termo: 'ABC1234', extra: true })).status, 400);
+    assert.equal(app.databaseCalls(), 0);
+  } finally { await app.close(); }
+});
+
+test('placas antigas e Mercosul são normalizadas e consultadas por igualdade com parâmetros', async () => {
+  const app = await start();
+  try {
+    for (const [termo, normalized] of [[' abc-1234 ', 'ABC1234'], ['abc1234', 'ABC1234'], ['abc1d23', 'ABC1D23'], ['ABC-1D23', 'ABC1D23']]) {
+      const response = await app.request('/api/buscar-placa', { termo });
+      assert.equal(response.status, 200);
+      assert.deepEqual(await response.json(), { total: 0, veiculos: [] });
+      assert.match(response.headers.get('cache-control'), /no-store/);
+      assert.deepEqual(app.inputs.slice(-2), [
+        { key: 'plate', value: normalized },
+        { key: 'formattedPlate', value: `${normalized.slice(0, 3)}-${normalized.slice(3)}` },
+      ]);
+      assert.match(app.queries.at(-1), /WHERE d\.plate IN \(@plate, @formattedPlate\)/);
+      assert.equal(app.queries.at(-1).includes(normalized), false);
+    }
+  } finally { await app.close(); }
+});
+
+test('veículos são retornados sem descartar nacionalidade desconhecida ou inventar grupo', async () => {
+  const recordset = [{ id: '9007199254740993', plate: 'ABC1D23', nationality_code: 99, nationality_description: null }];
+  const app = await start({ recordset });
+  try {
+    const response = await app.request('/api/buscar-placa', { termo: 'ABC1D23' });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { total: 1, veiculos: recordset });
+    assert.match(app.queries[0], /LEFT JOIN BR_VEICULOS\.\.nacionalidade/);
+    assert.doesNotMatch(app.queries[0], /br_group_vehicles/);
+  } finally { await app.close(); }
+});
+
 test('limite por conta não é contornado mudando o IP informado pelo cliente', async () => {
   const app = await start({ trustProxy: 1, rateLimits: { ipLimit: 1000, userLimit: 2 } });
   try {
@@ -141,6 +193,43 @@ test('excesso de tokens inválidos é bloqueado antes de acessar o banco', async
   } finally { await app.close(); }
 });
 
+test('detalhes da pessoa incluem PEP por ID parametrizado e preservam CNPJ textual', async () => {
+  const pep = [{ cnpj: '00000000000000', cnpj_relacionamento: null, dt_inicio: '2020-01-01', dt_carencia: null, descricao_profissao: 'DESCRICAO DE TESTE' }];
+  const queries = [];
+  const id = '9007199254740993';
+  const app = await start({ getPool: async () => ({ request: () => ({
+    input(key, type, value) { assert.equal(key, 'id'); assert.equal(value, id); return this; },
+    async query(query) {
+      queries.push(query);
+      return { recordset: query.includes('BR..p_pep') ? pep : query.includes('people      WHERE') ? [{ id }] : [] };
+    },
+  }) }) });
+  try {
+    const response = await app.request('/api/buscar-id', { id });
+    assert.equal(response.status, 200);
+    const result = await response.json();
+    assert.equal(result.encontrado, true);
+    assert.deepEqual(result.dados.pep, pep);
+    assert.match(queries.find(query => query.includes('BR..p_pep')), /WHERE id = @id/);
+    assert.equal(queries.length, 9);
+  } finally { await app.close(); }
+});
+
+test('pessoa sem registros PEP mantém as demais seções disponíveis', async () => {
+  const app = await start({ getPool: async () => ({ request: () => ({
+    input() { return this; },
+    async query(query) { return { recordset: query.includes('people      WHERE') ? [{ id: '1' }] : [] }; },
+  }) }) });
+  try {
+    const response = await app.request('/api/buscar-id', { id: '1' });
+    assert.equal(response.status, 200);
+    const result = await response.json();
+    assert.equal(result.encontrado, true);
+    assert.deepEqual(result.dados.pep, []);
+    assert.deepEqual(result.dados.people, [{ id: '1' }]);
+  } finally { await app.close(); }
+});
+
 test('falha em uma seção mantém o limite ocupado até terminarem as demais consultas', async () => {
   let count = 0;
   let finish;
@@ -150,7 +239,7 @@ test('falha em uma seção mantém o limite ocupado até terminarem as demais co
   const app = await start({ queryLimits: { userLimit: 1 }, getPool: async () => ({ request: () => ({
     input() { return this; },
     async query(query) {
-      if (++count === 8) started();
+      if (++count === 9) started();
       if (query.includes('people      WHERE')) throw new Error('simulated query error');
       await pending;
       return { recordset: [] };

@@ -28,6 +28,15 @@ function cpfText(value) {
   return cpf;
 }
 
+function plateText(value) {
+  if (typeof value !== 'string' || value.length > 16) invalid('Placa inválida.');
+  const plate = value.trim().toUpperCase();
+  if (!/^[A-Z]{3}-?(?:\d{4}|\d[A-Z]\d{2})$/.test(plate)) {
+    invalid('Digite uma placa válida, como ABC-1234 ou ABC1D23.');
+  }
+  return plate.replace('-', '');
+}
+
 function personId(value) {
   if (typeof value === 'number') {
     if (!Number.isSafeInteger(value)) invalid('ID inválido.');
@@ -51,4 +60,4 @@ function nameSearch(value, partial = false) {
   return `%${parts.map(escapeLike).join('%')}%`;
 }
 
-module.exports = { bodyFields, searchText, cpfText, personId, escapeLike, nameSearch };
+module.exports = { bodyFields, searchText, cpfText, plateText, personId, escapeLike, nameSearch };

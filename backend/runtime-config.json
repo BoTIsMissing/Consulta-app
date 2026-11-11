@@ -12,6 +12,7 @@
     "database": "BR",
     "credentialsFile": "",
     "caFile": "",
-    "tlsServerName": ""
+    "tlsServerName": "",
+    "trustServerCertificate": true
   }
 }

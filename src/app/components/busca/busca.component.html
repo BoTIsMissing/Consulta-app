@@ -9,9 +9,9 @@
     <nav class="nav nav-tipos" aria-label="Tipo de busca">
       <span class="nav-label">Buscar por</span>
       <ul>
-        <li *ngFor="let t of ['Nome','Nome parcial','CPF','Endereço']" [class.ativo]="tipo === t">
+        <li *ngFor="let t of ['Nome','Nome parcial','CPF','Endereço','Placa']" [class.ativo]="tipo === t">
           <button type="button" [attr.aria-pressed]="tipo === t" (click)="tipo = t; limpar()">
-            {{ t === 'Nome' || t === 'Nome parcial' ? '👤' : t === 'CPF' ? '🪪' : '📍' }} {{ t }}
+            {{ t === 'Nome' || t === 'Nome parcial' ? '👤' : t === 'CPF' ? '🪪' : t === 'Placa' ? '🚗' : '📍' }} {{ t }}
           </button>
         </li>
       </ul>
@@ -39,7 +39,7 @@
   <main class="main" id="area-impressao">
 
     <header class="topo no-print">
-      <h1>Consulta de Pessoas</h1>
+      <h1>{{ tipo === 'Placa' ? 'Consulta de Veículos' : 'Consulta de Pessoas' }}</h1>
       <p>Busque por <strong>{{ tipo }}</strong> e veja todos os dados vinculados</p>
     </header>
 
@@ -50,10 +50,10 @@
           <input [ngModel]="termo" (ngModelChange)="atualizarTermo($event)"
             aria-label="Termo da busca" enterkeyhint="search"
             [attr.inputmode]="tipo === 'CPF' ? 'numeric' : 'text'"
-            [attr.autocapitalize]="buscaPorNome ? 'characters' : 'none'"
-            [attr.maxlength]="tipo === 'CPF' ? 32 : tipo === 'Endereço' ? 200 : 150"
-            [style.text-transform]="buscaPorNome ? 'uppercase' : 'none'"
-            [placeholder]="tipo === 'CPF' ? 'Digite o CPF...' : tipo === 'Endereço' ? 'Rua, bairro, cidade ou CEP...' : tipo === 'Nome parcial' ? 'Ex.: JOÃO SILVA ou J. SILVA...' : 'Digite o nome completo...'"
+            [attr.autocapitalize]="buscaPorNome || tipo === 'Placa' ? 'characters' : 'none'"
+            [attr.maxlength]="tipo === 'CPF' ? 32 : tipo === 'Placa' ? 16 : tipo === 'Endereço' ? 200 : 150"
+            [style.text-transform]="buscaPorNome || tipo === 'Placa' ? 'uppercase' : 'none'"
+            [placeholder]="tipo === 'Placa' ? 'Ex.: ABC-1234 ou ABC1D23' : tipo === 'CPF' ? 'Digite o CPF...' : tipo === 'Endereço' ? 'Rua, bairro, cidade ou CEP...' : tipo === 'Nome parcial' ? 'Ex.: JOÃO SILVA ou J. SILVA...' : 'Digite o nome completo...'"
             (keyup.enter)="buscar()" [disabled]="carregando" autofocus />
           <button class="btn-limpar" type="button" aria-label="Limpar busca" *ngIf="termo" (click)="limpar()">✕</button>
         </div>
@@ -61,7 +61,7 @@
           {{ carregando ? 'Buscando...' : 'Buscar' }}
         </button>
       </div>
-      <p class="busca-hint">Digite ao menos 2 caracteres e pressione Enter</p>
+      <p class="busca-hint">{{ tipo === 'Placa' ? 'Digite a placa completa, com ou sem hífen, e pressione Enter. Até 50 registros por consulta.' : 'Digite ao menos 2 caracteres e pressione Enter' }}</p>
       <p class="busca-hint" *ngIf="tipo === 'Nome parcial'">Use partes do nome na ordem em que aparecem, mesmo sem todos os sobrenomes. Exibimos até 50 pessoas; refine o nome se necessário.</p>
     </div>
 
@@ -127,15 +127,15 @@
         </div>
 
         <div class="cards" *ngIf="temDados(s.key)">
-          <div class="card" *ngFor="let row of dados[s.key]">
+          <div class="card" *ngFor="let row of dados[s.key]; let rowIndex = index">
             <div class="card-linha" *ngFor="let col of keys(row, s.key)">
-              <span class="card-label">{{ col === 'relative' ? 'Parentesco' : col }}</span>
+              <span class="card-label">{{ rotuloCampo(col, s.key) }}</span>
               <span class="card-valor">
                 <span class="valor-texto">{{ temValor(row[col]) ? formatarValor(col, row[col]) : 'Não informado' }}</span>
-                <button class="btn-copiar no-print" type="button" [attr.aria-label]="'Copiar ' + (col === 'relative' ? 'parentesco' : col)"
-                  (click)="copiar(formatarValor(col, row[col]), col + row['id'])"
-                  [class.copiado]="copiado === col + row['id']">
-                  {{ copiado === col + row['id'] ? '✓' : '⎘' }}
+                <button class="btn-copiar no-print" type="button" [attr.aria-label]="'Copiar ' + rotuloCampo(col, s.key)"
+                  (click)="copiar(formatarValor(col, row[col]), s.key + ':' + rowIndex + ':' + col)"
+                  [class.copiado]="copiado === s.key + ':' + rowIndex + ':' + col">
+                  {{ copiado === s.key + ':' + rowIndex + ':' + col ? '✓' : '⎘' }}
                 </button>
               </span>
             </div>

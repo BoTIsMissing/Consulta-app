@@ -28,16 +28,23 @@ export class BuscaComponent implements OnDestroy {
   buscaFeita = false;
   private mapas = new Map<string, SafeResourceUrl>();
 
-  secoes = [
+  private secoesPessoas = [
     { key: 'people',    label: 'Identificação' },
     { key: 'profile',   label: 'Perfil' },
     { key: 'address',   label: 'Endereços' },
     { key: 'email',     label: 'Emails' },
     { key: 'fone',      label: 'Telefones' },
     { key: 'connected', label: 'Família/Vínculos' },
+    { key: 'pep',       label: 'Registros PEP / CNPJ' },
     { key: 'credit',    label: 'Crédito' },
     { key: 'status',    label: 'Status' },
   ];
+
+  private secoesVeiculos = [{ key: 'vehicles', label: 'Veículos' }];
+
+  get secoes() {
+    return this.tipo === 'Placa' ? this.secoesVeiculos : this.secoesPessoas;
+  }
 
   constructor(
     private consultaService: ConsultaService,
@@ -50,7 +57,7 @@ export class BuscaComponent implements OnDestroy {
   }
 
   atualizarTermo(valor: string) {
-    this.termo = this.buscaPorNome ? valor.toUpperCase() : valor;
+    this.termo = this.buscaPorNome || this.tipo === 'Placa' ? valor.toUpperCase() : valor;
   }
 
   buscar() {
@@ -67,7 +74,18 @@ export class BuscaComponent implements OnDestroy {
     this.notaSalva = '';
     this.notaTexto = '';
 
-    if (this.tipo === 'CPF') {
+    if (this.tipo === 'Placa') {
+      this.consultaService.buscarPlaca(this.termo).pipe(takeUntil(this.stopRequests)).subscribe({
+        next: (res) => {
+          this.carregando = false;
+          this.buscaFeita = true;
+          if (res.total === 0) this.erro = 'Nenhum veículo encontrado para esta placa.';
+          else this.dados = { vehicles: res.veiculos };
+          this.cdr.detectChanges();
+        },
+        error: (err) => { this.handleErro(err); },
+      });
+    } else if (this.tipo === 'CPF') {
       this.consultaService.buscarCpf(this.termo).pipe(takeUntil(this.stopRequests)).subscribe({
         next: (res) => {
           this.carregando = false;
@@ -204,6 +222,10 @@ export class BuscaComponent implements OnDestroy {
   formatarValor(col: string, valor: any): string {
     if (valor === null || valor === undefined || valor === '' || valor === 'None') return '';
     if (col === 'cpf' || col === 'cpf6') return this.formatarCpf(String(valor));
+    if (col === 'cnpj' || col === 'cnpj_relacionamento') {
+      return String(valor).replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+    }
+    if (col === 'dt_inicio' || col === 'dt_carencia') return this.formatarData(String(valor));
     if (col.includes('date') || col.includes('nascimento') || col === 'birth_date')
       return this.formatarData(String(valor));
     return String(valor);
@@ -217,8 +239,29 @@ export class BuscaComponent implements OnDestroy {
     if (!obj) return [];
     if (secao === 'connected') return ['name', 'name_relative', 'relative', 'cpf', 'birth_date'];
     return Object.keys(obj).filter(k =>
-      !['id', 'id_relative'].includes(k.toLowerCase()) && this.temValor(obj[k]),
+      !['id', 'id_relative', ...(secao === 'vehicles' ? ['idvehicles'] : [])].includes(k.toLowerCase()) && this.temValor(obj[k]),
     );
+  }
+
+  rotuloCampo(col: string, secao: string): string {
+    if (col === 'relative') return 'Parentesco';
+    if (secao === 'pep') {
+      const rotulos: Record<string, string> = {
+        cnpj: 'CNPJ', cnpj_relacionamento: 'CNPJ relacionamento',
+        dt_inicio: 'Data de início', dt_carencia: 'Data de carência',
+        descricao_profissao: 'Descrição da profissão',
+      };
+      return rotulos[col] || col;
+    }
+    if (secao !== 'vehicles') return col;
+    const rotulos: Record<string, string> = {
+      plate: 'Placa', renavam: 'Renavam', chassis: 'Chassi', mark: 'Marca', model: 'Modelo',
+      year_of_manufacture: 'Ano de fabricação', model_year: 'Ano do modelo', color: 'Cor',
+      fuel: 'Combustível', body_type: 'Carroceria', nationality_code: 'Código de nacionalidade',
+      nationality_description: 'Nacionalidade', state: 'UF', city: 'Cidade', origin: 'Origem',
+      dt_insert: 'Data de inclusão', dt_edit: 'Data de atualização',
+    };
+    return rotulos[col] || col;
   }
 
   temDados(key: string): boolean {

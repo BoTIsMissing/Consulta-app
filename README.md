@@ -2,6 +2,18 @@
 
 Angular no GitHub Pages, API Node/Express no Render, login por e-mail/senha do Firebase e dados no SQL Server. O backend valida o token e a permissão `panelAccess` antes de consultar o banco.
 
+## Consulta por placa
+
+Selecione **Placa** no painel. São aceitas placas antigas (`ABC-1234` ou `ABC1234`) e Mercosul (`ABC1D23`), inclusive em minúsculas. A consulta é exata e retorna até 50 registros, com os detalhes disponíveis do veículo e a descrição de nacionalidade. Não há associação com proprietário ou classificação de grupo sem um relacionamento confirmado no banco.
+
+A API usa `POST /api/buscar-placa` com JSON `{ "termo": "ABC1D23" }`, exigindo a mesma conta Firebase liberada das consultas de pessoas. O usuário SQL do backend precisa de leitura em `BR_VEICULOS..br_vehicles_details` e `BR_VEICULOS..nacionalidade`. Não há novas credenciais nem variáveis de ambiente. Publique o backend no Render antes do frontend no GitHub Pages.
+
+Sem índice em `plate`, a consulta pode demorar mesmo com o limite de resultados. Nenhum índice ou dado do banco é alterado pela aplicação. O RG não será incluído, pois não existe no banco, conforme confirmado pelo administrador.
+
+## Registros PEP / CNPJ
+
+As consultas de pessoas também retornam os registros de `BR..p_pep`, filtrados pelo `id` da pessoa. A seção mostra `cnpj`, `cnpj_relacionamento`, `dt_inicio`, `dt_carencia` e `descricao_profissao` quando preenchidos. CNPJs numéricos com 14 dígitos recebem máscara visual, preservando zeros iniciais; outros valores permanecem como vieram do banco. Esses registros não comprovam propriedade ou participação societária. O backend precisa de permissão de leitura nessa tabela.
+
 ## Publicar o backend no Render
 
 Crie um **Web Service** conectado ao repositório GitHub com:
