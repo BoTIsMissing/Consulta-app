@@ -5,7 +5,8 @@ const { requireAuth } = require('./auth');
 const runtimeConfig = require('./runtime-config.json');
 const { getDatabasePool, closeDatabasePool } = require('./database-pool');
 const { securityHeaders, noStore, createRequestLimits, createQueryGate } = require('./security');
-const { bodyFields, searchText, cpfText, plateText, personId, escapeLike, nameSearch } = require('./input-validation');
+const { bodyFields, searchText, cpfText, cnpjText, plateText, personId, escapeLike, nameSearch } = require('./input-validation');
+const { cnpjQuery } = require('./cnpj-query');
 const { vehicleQuery } = require('./vehicle-query');
 const { logSqlError } = require('./sql-diagnostics');
 
@@ -128,6 +129,22 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
       }
       const dados = await buscarTodosPorId(pool, idResult.recordset[0].id);
       res.json({ encontrado: true, dados });
+    } catch (err) {
+      await handleDatabaseError(res, err);
+    }
+  }));
+
+  // Pessoas com registros PEP correspondentes ao CNPJ informado.
+  api.post('/buscar-cnpj', guardQuery(async (req, res) => {
+    try {
+      const cnpj = cnpjText(bodyFields(req.body, ['termo']).termo);
+      const formatted = cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+      const pool = await getPool();
+      const result = await pool.request()
+        .input('cnpj', sql.VarChar(14), cnpj)
+        .input('formattedCnpj', sql.VarChar(18), formatted)
+        .query(cnpjQuery);
+      res.json({ total: result.recordset.length, candidatos: result.recordset });
     } catch (err) {
       await handleDatabaseError(res, err);
     }

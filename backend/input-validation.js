@@ -28,6 +28,13 @@ function cpfText(value) {
   return cpf;
 }
 
+function cnpjText(value) {
+  if (typeof value !== 'string' || value.length > 32) invalid('CNPJ inválido.');
+  const cnpj = value.replace(/[.\/\-\s]/g, '');
+  if (!/^\d{14}$/.test(cnpj)) invalid('Digite um CNPJ com 14 dígitos.');
+  return cnpj;
+}
+
 function plateText(value) {
   if (typeof value !== 'string' || value.length > 16) invalid('Placa inválida.');
   const plate = value.trim().toUpperCase();
@@ -60,4 +67,4 @@ function nameSearch(value, partial = false) {
   return `%${parts.map(escapeLike).join('%')}%`;
 }
 
-module.exports = { bodyFields, searchText, cpfText, plateText, personId, escapeLike, nameSearch };
+module.exports = { bodyFields, searchText, cpfText, cnpjText, plateText, personId, escapeLike, nameSearch };

@@ -169,6 +169,53 @@ test('veículos são retornados sem descartar nacionalidade desconhecida ou inve
   } finally { await app.close(); }
 });
 
+test('CNPJ exige autorização e rejeita entradas inválidas antes de chegar ao SQL', async () => {
+  const app = await start();
+  try {
+    for (const [token, status] of [['invalid', 401], ['unapproved', 403]]) {
+      assert.equal((await app.request('/api/buscar-cnpj', { termo: '00000000000000' }, { token })).status, status);
+    }
+    assert.equal((await app.request('/api/buscar-cnpj', undefined, { method: 'GET' })).status, 405);
+    for (const termo of [undefined, null, {}, 12345678901234, '12345678901', '1'.repeat(15), 'A'.repeat(14), "00' OR 1=1--", '%'.repeat(14), '1'.repeat(33)]) {
+      assert.equal((await app.request('/api/buscar-cnpj', { termo })).status, 400);
+    }
+    assert.equal((await app.request('/api/buscar-cnpj', { termo: '00000000000000', extra: true })).status, 400);
+    assert.equal(app.databaseCalls(), 0);
+  } finally { await app.close(); }
+});
+
+test('CNPJ com e sem máscara preserva zeros e pesquisa ambos os campos por parâmetros', async () => {
+  const app = await start();
+  try {
+    for (const termo of ['00123456000100', '00.123.456/0001-00', ' 00.123.456/0001-00 ']) {
+      const response = await app.request('/api/buscar-cnpj', { termo });
+      assert.equal(response.status, 200);
+      assert.deepEqual(await response.json(), { total: 0, candidatos: [] });
+      assert.match(response.headers.get('cache-control'), /no-store/);
+      assert.deepEqual(app.inputs.slice(-2), [
+        { key: 'cnpj', value: '00123456000100' },
+        { key: 'formattedCnpj', value: '00.123.456/0001-00' },
+      ]);
+      const query = app.queries.at(-1);
+      assert.match(query, /EXISTS/);
+      assert.match(query, /pep.id = p.id/);
+      assert.match(query, /pep.cnpj IN \(@cnpj, @formattedCnpj\)/);
+      assert.match(query, /pep.cnpj_relacionamento IN \(@cnpj, @formattedCnpj\)/);
+      assert.equal(query.includes('00123456000100'), false);
+    }
+  } finally { await app.close(); }
+});
+
+test('busca por CNPJ retorna candidatos com identificadores textuais', async () => {
+  const candidatos = [{ id: '9007199254740993', cpf: '00000000000', name: 'PESSOA DE TESTE', birth_date: '', genre: '' }];
+  const app = await start({ recordset: candidatos });
+  try {
+    const response = await app.request('/api/buscar-cnpj', { termo: '00000000000000' });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { total: 1, candidatos });
+  } finally { await app.close(); }
+});
+
 test('limite por conta não é contornado mudando o IP informado pelo cliente', async () => {
   const app = await start({ trustProxy: 1, rateLimits: { ipLimit: 1000, userLimit: 2 } });
   try {

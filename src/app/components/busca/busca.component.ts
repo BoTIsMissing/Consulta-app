@@ -106,12 +106,15 @@ export class BuscaComponent implements OnDestroy {
         error: (err) => { this.handleErro(err); },
       });
     } else {
-      this.consultaService.buscarNome(this.termo, this.tipo === 'Nome parcial').pipe(takeUntil(this.stopRequests)).subscribe({
+      const consulta = this.tipo === 'CNPJ'
+        ? this.consultaService.buscarCnpj(this.termo)
+        : this.consultaService.buscarNome(this.termo, this.tipo === 'Nome parcial');
+      consulta.pipe(takeUntil(this.stopRequests)).subscribe({
         next: (res) => {
           this.carregando = false;
           this.buscaFeita = true;
           if (res.total === 0) {
-            this.erro = 'Nenhum registro encontrado.';
+            this.erro = this.tipo === 'CNPJ' ? 'Nenhuma pessoa vinculada a este CNPJ nos registros PEP.' : 'Nenhum registro encontrado.';
           } else if (res.total === 1) {
             this.selecionarPessoa(res.candidatos[0].id);
           } else {

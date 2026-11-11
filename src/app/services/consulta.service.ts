@@ -59,6 +59,10 @@ export class ConsultaService {
     return this.http.post<{ total: number; veiculos: Veiculo[] }>(`${this.apiUrl}/buscar-placa`, { termo });
   }
 
+  buscarCnpj(termo: string): Observable<{ total: number; candidatos: Candidato[] }> {
+    return this.http.post<{ total: number; candidatos: Candidato[] }>(`${this.apiUrl}/buscar-cnpj`, { termo });
+  }
+
   buscarPorId(id: string | number): Observable<ResultadoCompleto> {
     return this.http.post<ResultadoCompleto>(`${this.apiUrl}/buscar-id`, { id: id.toString() });
   }

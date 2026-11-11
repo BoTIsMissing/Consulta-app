@@ -9,9 +9,9 @@
     <nav class="nav nav-tipos" aria-label="Tipo de busca">
       <span class="nav-label">Buscar por</span>
       <ul>
-        <li *ngFor="let t of ['Nome','Nome parcial','CPF','Endereço','Placa']" [class.ativo]="tipo === t">
+        <li *ngFor="let t of ['Nome','Nome parcial','CPF','CNPJ','Endereço','Placa']" [class.ativo]="tipo === t">
           <button type="button" [attr.aria-pressed]="tipo === t" (click)="tipo = t; limpar()">
-            {{ t === 'Nome' || t === 'Nome parcial' ? '👤' : t === 'CPF' ? '🪪' : t === 'Placa' ? '🚗' : '📍' }} {{ t }}
+            {{ t === 'Nome' || t === 'Nome parcial' ? '👤' : t === 'CPF' ? '🪪' : t === 'CNPJ' ? '🏢' : t === 'Placa' ? '🚗' : '📍' }} {{ t }}
           </button>
         </li>
       </ul>
@@ -49,11 +49,11 @@
         <div class="input-wrap">
           <input [ngModel]="termo" (ngModelChange)="atualizarTermo($event)"
             aria-label="Termo da busca" enterkeyhint="search"
-            [attr.inputmode]="tipo === 'CPF' ? 'numeric' : 'text'"
+            [attr.inputmode]="tipo === 'CPF' || tipo === 'CNPJ' ? 'numeric' : 'text'"
             [attr.autocapitalize]="buscaPorNome || tipo === 'Placa' ? 'characters' : 'none'"
-            [attr.maxlength]="tipo === 'CPF' ? 32 : tipo === 'Placa' ? 16 : tipo === 'Endereço' ? 200 : 150"
+            [attr.maxlength]="tipo === 'CPF' || tipo === 'CNPJ' ? 32 : tipo === 'Placa' ? 16 : tipo === 'Endereço' ? 200 : 150"
             [style.text-transform]="buscaPorNome || tipo === 'Placa' ? 'uppercase' : 'none'"
-            [placeholder]="tipo === 'Placa' ? 'Ex.: ABC-1234 ou ABC1D23' : tipo === 'CPF' ? 'Digite o CPF...' : tipo === 'Endereço' ? 'Rua, bairro, cidade ou CEP...' : tipo === 'Nome parcial' ? 'Ex.: JOÃO SILVA ou J. SILVA...' : 'Digite o nome completo...'"
+            [placeholder]="tipo === 'Placa' ? 'Ex.: ABC-1234 ou ABC1D23' : tipo === 'CNPJ' ? 'Digite o CNPJ...' : tipo === 'CPF' ? 'Digite o CPF...' : tipo === 'Endereço' ? 'Rua, bairro, cidade ou CEP...' : tipo === 'Nome parcial' ? 'Ex.: JOÃO SILVA ou J. SILVA...' : 'Digite o nome completo...'"
             (keyup.enter)="buscar()" [disabled]="carregando" autofocus />
           <button class="btn-limpar" type="button" aria-label="Limpar busca" *ngIf="termo" (click)="limpar()">✕</button>
         </div>
@@ -63,6 +63,7 @@
       </div>
       <p class="busca-hint">{{ tipo === 'Placa' ? 'Digite a placa completa, com ou sem hífen, e pressione Enter. Até 50 registros por consulta.' : 'Digite ao menos 2 caracteres e pressione Enter' }}</p>
       <p class="busca-hint" *ngIf="tipo === 'Nome parcial'">Use partes do nome na ordem em que aparecem, mesmo sem todos os sobrenomes. Exibimos até 50 pessoas; refine o nome se necessário.</p>
+      <p class="busca-hint" *ngIf="tipo === 'CNPJ'">Informe os 14 dígitos, com ou sem pontuação. Busca nos campos CNPJ e CNPJ relacionamento dos registros PEP. Até 50 pessoas por consulta.</p>
     </div>
 
     <!-- Carregando -->

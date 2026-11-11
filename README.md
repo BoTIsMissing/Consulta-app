@@ -12,6 +12,8 @@ Sem índice em `plate`, a consulta pode demorar mesmo com o limite de resultados
 
 ## Registros PEP / CNPJ
 
+Selecione **CNPJ** no menu para localizar pessoas com registros correspondentes em `cnpj` ou `cnpj_relacionamento` de `p_pep`. Aceita os 14 dígitos com ou sem máscara. A API autenticada `POST /api/buscar-cnpj`, com JSON `{ "termo": "00123456000100" }`, retorna até 50 pessoas sem duplicá-las quando há vários registros correspondentes. Uma pessoa é aberta diretamente; com várias, escolha na lista. A pesquisa não consulta um cadastro completo de empresas.
+
 As consultas de pessoas também retornam os registros de `BR..p_pep`, filtrados pelo `id` da pessoa. A seção mostra `cnpj`, `cnpj_relacionamento`, `dt_inicio`, `dt_carencia` e `descricao_profissao` quando preenchidos. CNPJs numéricos com 14 dígitos recebem máscara visual, preservando zeros iniciais; outros valores permanecem como vieram do banco. Esses registros não comprovam propriedade ou participação societária. O backend precisa de permissão de leitura nessa tabela.
 
 ## Publicar o backend no Render
