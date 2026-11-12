@@ -24,6 +24,11 @@ button:focus-visible { outline: 2px solid #93c5fd; outline-offset: 4px; }
 .session-bar { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 12px; padding: 10px 24px; border-bottom: 1px solid #1e2636; font-size: 12px; color: #94a3b8; }
 .session-bar span { overflow-wrap: anywhere; min-width: 0; }
 .session-bar .audit-notice { flex: 0 0 100%; order: 3; font-size: 11px; }
+.authenticated-shell { display: flex; flex-direction: column; height: 100dvh; }
+.session-bar { flex-shrink: 0; }
+.panel-content { flex: 1; min-height: 0; overflow: hidden; }
+app-history { display: block; height: 100%; overflow: auto; }
+@media (max-width: 768px) { .panel-content { overflow: auto; } }
 .session-bar button { background: #1e2636; color: #e2e8f0; border: 1px solid #334155; padding: 6px 12px; }
 @media (max-width: 480px) {
   .login-page { padding: 20px 16px; }
@@ -32,4 +37,8 @@ button:focus-visible { outline: 2px solid #93c5fd; outline-offset: 4px; }
   .session-bar span { flex: 1; }
   h1 { font-size: 24px; }
 }
-@media print { .session-bar { display: none; } }
+@media print {
+  .session-bar { display: none; }
+  .authenticated-shell, app-history { height: auto; }
+  .panel-content, app-history { overflow: visible; }
+}

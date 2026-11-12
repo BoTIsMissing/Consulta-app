@@ -3,6 +3,7 @@
     <div class="login-card" role="status">Verificando seu acesso…</div>
   </main>
 } @else if (auth.authorized()) {
+  <div class="authenticated-shell">
   <header class="session-bar">
     <span>{{ auth.user()?.email }}</span>
     @if (auth.historyEnabled()) { <span class="audit-notice">Consultas registradas para revisão pelo administrador.</span> }
@@ -13,12 +14,15 @@
     }
     <button type="button" (click)="auth.logout()">Sair</button>
   </header>
+  <div class="panel-content">
   @if (showHistory && auth.historyAdmin()) {
     @if (!auth.historyEnabled()) {
       <p class="notice">A gravação do histórico ainda está desativada no servidor. Ative-a após configurar o Firestore.</p>
     }
     <app-history />
   } @else { <app-busca /> }
+  </div>
+  </div>
 } @else {
   <main class="login-page">
     <section class="login-card" aria-labelledby="login-title">
