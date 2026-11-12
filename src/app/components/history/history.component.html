@@ -1,0 +1,35 @@
+<main class="history">
+  <header>
+    <div>
+      <p class="eyebrow">ADMINISTRAÇÃO</p>
+      <h1>Histórico de consultas</h1>
+    </div>
+    <button type="button" (click)="refresh()" [disabled]="loading()">Atualizar</button>
+  </header>
+  <p class="description">Consultas solicitadas por todos os usuários, da mais recente para a mais antiga. Datas no horário deste dispositivo. O registro não garante que a busca tenha encontrado resultados.</p>
+  <p class="description">O histórico começa após sua ativação. Aberturas de pessoas pela lista de resultados também são registradas por ID.</p>
+  @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+  @if (loading()) { <p role="status">Carregando histórico…</p> }
+  @if (!loading() && !error() && entries().length === 0) {
+    <p class="empty">Nenhuma consulta registrada.</p>
+  }
+  <section aria-label="Consultas registradas" [attr.aria-busy]="loading()">
+    @for (entry of entries(); track entry.id) {
+      <article class="entry">
+        <div class="entry-header">
+          <strong>{{ entry.email }}</strong>
+          <time [attr.datetime]="entry.at">{{ entry.at | date:'dd/MM/yyyy HH:mm:ss' }}</time>
+        </div>
+        <dl>
+          <div><dt>Tipo de consulta</dt><dd>{{ label(entry.type) }}</dd></div>
+          <div><dt>Termo pesquisado</dt><dd class="term">{{ entry.term }}</dd></div>
+        </dl>
+      </article>
+    }
+  </section>
+  <nav aria-label="Páginas do histórico">
+    <button type="button" (click)="previous()" [disabled]="loading() || page() === 1">Anterior</button>
+    <span>Página {{ page() }}</span>
+    <button type="button" (click)="next()" [disabled]="loading() || !nextCursor()">Próxima</button>
+  </nav>
+</main>

@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // O histórico é acessado somente pelo backend autenticado, usando o Admin SDK.
+    match /searchHistory/{entry} {
+      allow read, write: if false;
+    }
+  }
+}

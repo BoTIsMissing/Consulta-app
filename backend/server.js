@@ -10,8 +10,10 @@ const { cnpjQuery } = require('./cnpj-query');
 const { buscarEmpresa, settledResults } = require('./company-query');
 const { vehicleQuery } = require('./vehicle-query');
 const { logSqlError } = require('./sql-diagnostics');
+const { createHistoryStore } = require('./search-history');
 
 function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
+  history = createHistoryStore(),
   origins, rateLimits, queryLimits, trustProxy = process.env.RENDER === 'true' ? 1 : false } = {}) {
   const app = express();
   app.set('trust proxy', trustProxy);
@@ -36,7 +38,8 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
   api.use(limits.beforeAuth);
   api.use(authenticate);
   api.use(limits.afterAuth);
-  api.get('/auth/session', (req, res) => res.json({ email: req.user.email }));
+  api.get('/auth/session', (req, res) => res.json({ email: req.user.email,
+    historyAdmin: req.user.historyAdmin === true, historyEnabled: history.enabled }));
   api.use((req, res, next) => {
     if (req.path.startsWith('/buscar-') && req.method !== 'POST') {
       res.setHeader('Allow', 'POST');
@@ -51,8 +54,30 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
   api.use(express.json({ limit: '4kb', strict: true, inflate: false }));
   app.use('/api', api);
 
+  api.post('/admin/history', async (req, res) => {
+    if (req.user.historyAdmin !== true) return res.status(403).json({ erro: 'Acesso exclusivo ao administrador do histórico.' });
+    try {
+      const { cursor } = bodyFields(req.body, ['cursor']);
+      res.json(await history.list(cursor));
+    } catch (error) {
+      if (error.code === 'INVALID_INPUT') return res.status(400).json({ erro: error.message });
+      return res.status(503).json({ erro: error.code === 'HISTORY_DISABLED'
+        ? 'O histórico ainda não foi ativado no servidor.' : 'Não foi possível carregar o histórico. Tente novamente mais tarde.' });
+    }
+  });
+
+  async function recordSearch(req, type, term) {
+    try {
+      await history.record({ uid: req.user.uid, email: req.user.email, type, term });
+    } catch {
+      console.error('[SEARCH_HISTORY_UNAVAILABLE] Não foi possível registrar uma consulta.');
+      throw Object.assign(new Error('Não foi possível registrar a consulta no histórico. Tente novamente mais tarde.'), { code: 'HISTORY_UNAVAILABLE' });
+    }
+  }
+
   async function handleDatabaseError(res, error) {
     if (error.code === 'INVALID_INPUT') return res.status(400).json({ erro: error.message });
+    if (error.code === 'HISTORY_UNAVAILABLE') return res.status(503).json({ erro: error.message });
     logSqlError(error);
     return res.status(error.code === 'SQL_CONFIGURATION_ERROR' ? 503 : 500)
       .json({ erro: 'Não foi possível consultar os dados. Tente novamente mais tarde.' });
@@ -104,6 +129,7 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
       const { termo, parcial = false } = bodyFields(req.body, ['termo', 'parcial']);
       const parametro = nameSearch(termo, parcial);
       const buscaParcial = parcial;
+      await recordSearch(req, parcial ? 'nome_parcial' : 'nome', searchText(termo).toUpperCase());
       const pool = await getPool();
       const result = await pool.request()
         .input('termo', sql.VarChar, parametro)
@@ -121,6 +147,7 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
     try {
       const { termo } = bodyFields(req.body, ['termo']);
       const cpf = cpfText(termo);
+      await recordSearch(req, 'cpf', cpf);
       const pool = await getPool();
       const idResult = await pool.request()
         .input('cpf', sql.VarChar, cpf)
@@ -140,6 +167,7 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
     try {
       const cnpj = cnpjText(bodyFields(req.body, ['termo']).termo);
       const formatted = cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+      await recordSearch(req, 'cnpj', cnpj);
       const pool = await getPool();
       const request = pool.request()
         .input('cnpj', sql.VarChar(14), cnpj)
@@ -157,6 +185,7 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
   api.post('/buscar-placa', guardQuery(async (req, res) => {
     try {
       const plate = plateText(bodyFields(req.body, ['termo']).termo);
+      await recordSearch(req, 'placa', plate);
       const pool = await getPool();
       const result = await pool.request()
         .input('plate', sql.VarChar(50), plate)
@@ -172,6 +201,7 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
   api.post('/buscar-id', guardQuery(async (req, res) => {
     try {
       const id = personId(bodyFields(req.body, ['id']).id);
+      await recordSearch(req, 'id', id);
       const pool = await getPool();
       const dados = await buscarTodosPorId(pool, id);
       const encontrado = dados.people.length > 0;
@@ -185,6 +215,7 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
   api.post('/buscar-endereco', guardQuery(async (req, res) => {
     try {
       const termo = searchText(bodyFields(req.body, ['termo']).termo, 200);
+      await recordSearch(req, 'endereco', termo.toUpperCase());
       const pool = await getPool();
       const result = await pool.request()
         .input('termo', sql.VarChar, `%${escapeLike(termo.toUpperCase())}%`)

@@ -10,6 +10,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: SEARCH_HISTORY_ENABLED
+        sync: false
       - key: GOOGLE_APPLICATION_CREDENTIALS
         value: /etc/secrets/service-account.json
       - key: SQL_CREDENTIALS_FILE

@@ -141,7 +141,7 @@ test('todas as rotas de consulta e sessão exigem autenticação via HTTP', asyn
     assert.equal(missing.status, 404);
     assert.deepEqual(await missing.json(), { erro: 'Rota não encontrada.' });
     for (const route of ['/buscar-nome?termo=TESTE', '/buscar-cpf?termo=01234567890',
-      '/buscar-id?id=1', '/buscar-endereco?termo=TESTE', '/buscar-placa', '/buscar-cnpj', '/auth/session']) {
+      '/buscar-id?id=1', '/buscar-endereco?termo=TESTE', '/buscar-placa', '/buscar-cnpj', '/admin/history', '/auth/session']) {
       const response = await fetch(`http://127.0.0.1:${server.address().port}/api${route}`);
       assert.equal(response.status, 401, route);
       assert.equal(response.headers.get('cache-control'), 'no-store');

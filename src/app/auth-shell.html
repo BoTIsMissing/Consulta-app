@@ -5,9 +5,20 @@
 } @else if (auth.authorized()) {
   <header class="session-bar">
     <span>{{ auth.user()?.email }}</span>
+    @if (auth.historyEnabled()) { <span class="audit-notice">Consultas registradas para revisão pelo administrador.</span> }
+    @if (auth.historyAdmin()) {
+      <button type="button" (click)="showHistory = !showHistory" [attr.aria-pressed]="showHistory">
+        {{ showHistory ? 'Voltar às consultas' : 'Histórico de consultas' }}
+      </button>
+    }
     <button type="button" (click)="auth.logout()">Sair</button>
   </header>
-  <app-busca />
+  @if (showHistory && auth.historyAdmin()) {
+    @if (!auth.historyEnabled()) {
+      <p class="notice">A gravação do histórico ainda está desativada no servidor. Ative-a após configurar o Firestore.</p>
+    }
+    <app-history />
+  } @else { <app-busca /> }
 } @else {
   <main class="login-page">
     <section class="login-card" aria-labelledby="login-title">
@@ -43,7 +54,7 @@
       @if (auth.user()) {
         <button class="logout-button" type="button" (click)="auth.logout()">Sair desta conta</button>
       }
-      <p class="footer">Sua sessão é verificada antes de cada consulta.</p>
+      <p class="footer">Sua sessão é verificada antes de cada consulta. As consultas podem ser registradas para revisão pelo administrador.</p>
     </section>
   </main>
 }

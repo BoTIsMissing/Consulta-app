@@ -12,6 +12,8 @@ export class AuthService {
   readonly loading = signal(true);
   readonly busy = signal(false);
   readonly authorized = signal(false);
+  readonly historyAdmin = signal(false);
+  readonly historyEnabled = signal(false);
   readonly error = signal('');
   readonly configured = Object.values(firebaseConfig).every(value => Boolean(value.trim()));
   private auth: Auth | null = null;
@@ -40,6 +42,8 @@ export class AuthService {
   private async checkSession(user: User | null) {
     const revision = ++this.revision;
     this.authorized.set(false);
+    this.historyAdmin.set(false);
+    this.historyEnabled.set(false);
     this.user.set(user);
     this.loading.set(true);
     this.error.set('');
@@ -53,7 +57,12 @@ export class AuthService {
           const body = await response.json().catch(() => null);
           throw new Error(body?.erro || 'Não foi possível verificar seu acesso. Tente novamente.');
         }
-        if (revision === this.revision) this.authorized.set(true);
+        const session = await response.json();
+        if (revision === this.revision) {
+          this.historyAdmin.set(session.historyAdmin === true);
+          this.historyEnabled.set(session.historyEnabled === true);
+          this.authorized.set(true);
+        }
       }
     } catch (error) {
       if (revision === this.revision) this.error.set(
@@ -96,6 +105,8 @@ export class AuthService {
   async logout() {
     this.revision++;
     this.authorized.set(false);
+    this.historyAdmin.set(false);
+    this.historyEnabled.set(false);
     this.user.set(null);
     this.loading.set(false);
     if (this.auth) {
@@ -113,6 +124,8 @@ export class AuthService {
   denyAccess(message: string) {
     this.revision++;
     this.authorized.set(false);
+    this.historyAdmin.set(false);
+    this.historyEnabled.set(false);
     this.loading.set(false);
     this.error.set(message);
   }

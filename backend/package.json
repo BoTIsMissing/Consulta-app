@@ -8,7 +8,8 @@
     "start": "node server.js",
     "test": "node --test *.test.js",
     "authorize": "node authorize-user.js",
-    "check:sql": "node check-sql.js"
+    "check:sql": "node check-sql.js",
+    "check:history": "node check-history.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

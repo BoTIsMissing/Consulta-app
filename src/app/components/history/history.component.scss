@@ -1,0 +1,24 @@
+:host { display: block; }
+* { box-sizing: border-box; }
+.history { max-width: 1050px; margin: auto; padding: 32px 24px; }
+header, .entry-header, nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+h1 { font-size: 26px; margin: 8px 0; }
+.eyebrow { font-size: 11px; letter-spacing: .1em; color: #82acf2; }
+.description, time, dt, nav span { color: #94a3b8; font-size: 13px; line-height: 1.6; }
+button { min-height: 44px; padding: 10px 16px; border: 1px solid #334155; border-radius: 8px; background: #1e2636; color: #e2e8f0; font: inherit; cursor: pointer; touch-action: manipulation; }
+button:disabled { opacity: .5; cursor: default; }
+button:focus-visible { outline: 2px solid #93c5fd; outline-offset: 3px; }
+.entry { border: 1px solid #263249; border-radius: 10px; background: #161b27; padding: 20px; margin: 16px 0; overflow-wrap: anywhere; }
+.entry-header strong { font-size: 14px; min-width: 0; }
+dl { margin: 16px 0 0; }
+dl div + div { margin-top: 12px; }
+dd { margin: 4px 0 0; font-size: 14px; }
+.term { white-space: pre-wrap; }
+.error { padding: 16px; background: #4b2028; color: #fecaca; border-radius: 8px; }
+.empty { padding: 32px 0; color: #94a3b8; }
+nav { margin-top: 24px; }
+@media (max-width: 480px) {
+  .history { padding: 24px 16px; }
+  .entry { padding: 16px; }
+  h1 { font-size: 24px; }
+}

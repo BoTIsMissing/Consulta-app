@@ -28,6 +28,7 @@ async function start({ recordset = [], respond, ...options } = {}) {
   } });
   const app = createApp({
     origins: [origin], authenticate,
+    history: { enabled: false, async record() {}, async list() { throw new Error('History disabled in SQL tests'); } },
     getPool: async () => { databaseCalls++; return pool; },
     rateLimits: { ipLimit: 1000, userLimit: 1000 }, ...options,
   });
