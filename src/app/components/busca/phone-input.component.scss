@@ -1,0 +1,8 @@
+:host { display: flex; flex: 1; min-width: 0; align-items: end; gap: 8px; }
+label { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1; }
+label:first-child { flex: 0 0 64px; }
+span { font-size: 12px; color: #94a3b8; }
+input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 48px; padding: 12px; border: 1px solid #1e2636; border-radius: 8px; background: #161b27; color: #e2e8f0; font-size: 16px; }
+button { flex-shrink: 0; min-width: 44px; min-height: 48px; background: #161b27; border: 1px solid #1e2636; border-radius: 8px; color: #94a3b8; cursor: pointer; touch-action: manipulation; }
+input:focus-visible, button:focus-visible { outline: 2px solid #93c5fd; outline-offset: 2px; }
+:disabled { opacity: .5; }

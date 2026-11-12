@@ -4,17 +4,19 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ConsultaService, Candidato, DadosEmpresa } from '../../services/consulta.service';
 import { Subject, takeUntil } from 'rxjs';
+import { PhoneInputComponent } from './phone-input.component';
 
 @Component({
   selector: 'app-busca',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PhoneInputComponent],
   templateUrl: './busca.component.html',
   styleUrls: ['./busca.component.scss'],
 })
 export class BuscaComponent implements OnDestroy {
   private stopRequests = new Subject<void>();
   termo = '';
+  ddd = '';
   tipo = 'Nome';
   notaTexto = '';
   notaSalva = '';
@@ -78,8 +80,14 @@ export class BuscaComponent implements OnDestroy {
     this.termo = this.buscaPorNome || this.tipo === 'Placa' ? valor.toUpperCase() : valor;
   }
 
+  get podeBuscar(): boolean {
+    if (this.tipo === 'Telefone') return /^[1-9]\d$/.test(this.ddd.replace(/[()\s]/g, ''))
+      && /^\d{8,9}$/.test(this.termo.replace(/[\s-]/g, ''));
+    return this.termo.trim().length >= 2;
+  }
+
   buscar() {
-    if (!this.termo.trim() || this.termo.trim().length < 2) return;
+    if (!this.podeBuscar) return;
     this.stopRequests.next();
     this.atualizarTermo(this.termo.trim());
     this.carregando = true;
@@ -143,12 +151,15 @@ export class BuscaComponent implements OnDestroy {
         error: (err) => { this.handleErro(err); },
       });
     } else {
-      this.consultaService.buscarNome(this.termo, this.tipo === 'Nome parcial').pipe(takeUntil(this.stopRequests)).subscribe({
+      const consulta = this.tipo === 'Telefone'
+        ? this.consultaService.buscarTelefone(this.ddd, this.termo)
+        : this.consultaService.buscarNome(this.termo, this.tipo === 'Nome parcial');
+      consulta.pipe(takeUntil(this.stopRequests)).subscribe({
         next: (res) => {
           this.carregando = false;
           this.buscaFeita = true;
           if (res.total === 0) {
-            this.erro = 'Nenhum registro encontrado.';
+            this.erro = this.tipo === 'Telefone' ? 'Nenhuma pessoa encontrada para este DDD e telefone.' : 'Nenhum registro encontrado.';
           } else if (res.total === 1) {
             this.selecionarPessoa(res.candidatos[0].id);
           } else {
@@ -193,6 +204,7 @@ export class BuscaComponent implements OnDestroy {
     this.stopRequests.next();
     this.carregando = false;
     this.termo = '';
+    this.ddd = '';
     this.dados = null;
     this.dadosEmpresa = null;
     this.mapas.clear();

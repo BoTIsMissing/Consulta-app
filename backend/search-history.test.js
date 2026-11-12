@@ -49,6 +49,7 @@ test('todas as buscas registram usuário e termo normalizado antes do SQL, inclu
       ['/buscar-placa', { termo: 'abc-1234' }, 'placa', 'ABC1234'],
       ['/buscar-id', { id: '9007199254740993' }, 'id', '9007199254740993'],
       ['/buscar-endereco', { termo: 'rua teste' }, 'endereco', 'RUA TESTE'],
+      ['/buscar-telefone', { ddd: '(11)', fone: '0000-0000' }, 'telefone', '(11) 00000000'],
     ];
     for (const [route, body, type, term] of cases) {
       app.events.length = 0;

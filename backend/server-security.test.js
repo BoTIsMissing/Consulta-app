@@ -239,6 +239,60 @@ test('busca por CNPJ retorna empresa e CNES mesmo sem pessoas em PEP', async () 
   } finally { await app.close(); }
 });
 
+test('telefone exige acesso e valida DDD e número antes de consultar o SQL', async () => {
+  const app = await start();
+  try {
+    for (const [token, status] of [['invalid', 401], ['unapproved', 403]]) {
+      assert.equal((await app.request('/api/buscar-telefone', { ddd: '11', fone: '00000000' }, { token })).status, status);
+    }
+    assert.equal((await app.request('/api/buscar-telefone', undefined, { method: 'GET' })).status, 405);
+    for (const body of [
+      {}, { ddd: '11' }, { ddd: 11, fone: '00000000' }, { ddd: '11', fone: 12345678 },
+      { ddd: '1', fone: '00000000' }, { ddd: '011', fone: '00000000' }, { ddd: '00', fone: '00000000' },
+      { ddd: '11', fone: '1234567' }, { ddd: '11', fone: '11999999999' },
+      { ddd: '11', fone: "' OR 1=1--" }, { ddd: '%_', fone: '00000000' },
+      { ddd: '11', fone: '0'.repeat(21) }, { ddd: {}, fone: '00000000' },
+      { ddd: '11', fone: '00000000', uid: 'forged-user' },
+    ]) assert.equal((await app.request('/api/buscar-telefone', body)).status, 400);
+    assert.equal(app.databaseCalls(), 0);
+  } finally { await app.close(); }
+});
+
+test('telefone normaliza formatação, preserva zeros e mantém DDD e número como parâmetros separados', async () => {
+  const app = await start();
+  try {
+    for (const [ddd, fone, expectedDdd, expectedFone] of [
+      ['(11)', '0000-0000', '11', '00000000'],
+      ['21', '99999-0000', '21', '999990000'],
+    ]) {
+      const response = await app.request('/api/buscar-telefone', { ddd, fone });
+      assert.equal(response.status, 200);
+      assert.match(response.headers.get('cache-control'), /no-store/);
+      assert.deepEqual(await response.json(), { total: 0, candidatos: [] });
+      assert.deepEqual(app.inputs.slice(-2), [
+        { key: 'ddd', value: expectedDdd }, { key: 'fone', value: expectedFone },
+      ]);
+      assert.match(app.queries.at(-1), /EXISTS/);
+      assert.match(app.queries.at(-1), /FROM BR\.\.p_fone f/);
+      assert.match(app.queries.at(-1), /f.id = p.id AND f.ddd = @ddd AND f.fone = @fone/);
+      assert.doesNotMatch(app.queries.at(-1), /LIKE|999990000|00000000/);
+    }
+  } finally { await app.close(); }
+});
+
+test('telefone retorna as pessoas encontradas com IDs textuais para seleção', async () => {
+  const candidatos = [
+    { id: '9007199254740993', name: 'PESSOA FICTICIA', cpf: '00000000000' },
+    { id: '9007199254740994', name: 'OUTRA PESSOA FICTICIA', cpf: '00000000000' },
+  ];
+  const app = await start({ recordset: candidatos });
+  try {
+    const response = await app.request('/api/buscar-telefone', { ddd: '11', fone: '00000000' });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { total: 2, candidatos });
+  } finally { await app.close(); }
+});
+
 test('limite por conta não é contornado mudando o IP informado pelo cliente', async () => {
   const app = await start({ trustProxy: 1, rateLimits: { ipLimit: 1000, userLimit: 2 } });
   try {

@@ -35,6 +35,17 @@ function cnpjText(value) {
   return cnpj;
 }
 
+function phoneParts(ddd, fone) {
+  if (typeof ddd !== 'string' || ddd.length > 8 || typeof fone !== 'string' || fone.length > 20) {
+    invalid('Informe o DDD e o telefone como texto.');
+  }
+  const area = ddd.replace(/[()\s]/g, '');
+  const number = fone.replace(/[\s-]/g, '');
+  if (!/^[1-9]\d$/.test(area)) invalid('Digite um DDD com 2 dígitos.');
+  if (!/^\d{8,9}$/.test(number)) invalid('Digite um telefone com 8 ou 9 dígitos, sem o DDD.');
+  return { ddd: area, fone: number };
+}
+
 function plateText(value) {
   if (typeof value !== 'string' || value.length > 16) invalid('Placa inválida.');
   const plate = value.trim().toUpperCase();
@@ -67,4 +78,4 @@ function nameSearch(value, partial = false) {
   return `%${parts.map(escapeLike).join('%')}%`;
 }
 
-module.exports = { bodyFields, searchText, cpfText, cnpjText, plateText, personId, escapeLike, nameSearch };
+module.exports = { bodyFields, searchText, cpfText, cnpjText, phoneParts, plateText, personId, escapeLike, nameSearch };

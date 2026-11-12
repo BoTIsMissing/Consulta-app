@@ -9,9 +9,9 @@
     <nav class="nav nav-tipos" aria-label="Tipo de busca">
       <span class="nav-label">Buscar por</span>
       <ul>
-        <li *ngFor="let t of ['Nome','Nome parcial','CPF','CNPJ','Endereço','Placa']" [class.ativo]="tipo === t">
+        <li *ngFor="let t of ['Nome','Nome parcial','CPF','CNPJ','Telefone','Endereço','Placa']" [class.ativo]="tipo === t">
           <button type="button" [attr.aria-pressed]="tipo === t" (click)="tipo = t; limpar()">
-            {{ t === 'Nome' || t === 'Nome parcial' ? '👤' : t === 'CPF' ? '🪪' : t === 'CNPJ' ? '🏢' : t === 'Placa' ? '🚗' : '📍' }} {{ t }}
+            {{ t === 'Nome' || t === 'Nome parcial' ? '👤' : t === 'CPF' ? '🪪' : t === 'CNPJ' ? '🏢' : t === 'Telefone' ? '📞' : t === 'Placa' ? '🚗' : '📍' }} {{ t }}
           </button>
         </li>
       </ul>
@@ -46,7 +46,9 @@
     <!-- Barra de busca -->
     <div class="busca-wrap no-print">
       <div class="busca-bar">
-        <div class="input-wrap">
+        <app-phone-input *ngIf="tipo === 'Telefone'" [(ddd)]="ddd" [(fone)]="termo"
+          [disabled]="carregando" (search)="buscar()" (clear)="limpar()" />
+        <div class="input-wrap" *ngIf="tipo !== 'Telefone'">
           <input [ngModel]="termo" (ngModelChange)="atualizarTermo($event)"
             aria-label="Termo da busca" enterkeyhint="search"
             [attr.inputmode]="tipo === 'CPF' || tipo === 'CNPJ' ? 'numeric' : 'text'"
@@ -57,11 +59,11 @@
             (keyup.enter)="buscar()" [disabled]="carregando" autofocus />
           <button class="btn-limpar" type="button" aria-label="Limpar busca" *ngIf="termo" (click)="limpar()">✕</button>
         </div>
-        <button class="btn-buscar" (click)="buscar()" [disabled]="carregando || termo.trim().length < 2">
+        <button class="btn-buscar" (click)="buscar()" [disabled]="carregando || !podeBuscar">
           {{ carregando ? 'Buscando...' : 'Buscar' }}
         </button>
       </div>
-      <p class="busca-hint">{{ tipo === 'Placa' ? 'Digite a placa completa, com ou sem hífen, e pressione Enter. Até 50 registros por consulta.' : tipo === 'CNPJ' ? 'Digite o CNPJ completo e pressione Enter' : 'Digite ao menos 2 caracteres e pressione Enter' }}</p>
+      <p class="busca-hint">{{ tipo === 'Placa' ? 'Digite a placa completa, com ou sem hífen, e pressione Enter. Até 50 registros por consulta.' : tipo === 'CNPJ' ? 'Digite o CNPJ completo e pressione Enter' : tipo === 'Telefone' ? 'Informe o DDD de 2 dígitos e o número de 8 ou 9 dígitos. Aceita hífen. Até 50 pessoas por consulta.' : 'Digite ao menos 2 caracteres e pressione Enter' }}</p>
       <p class="busca-hint" *ngIf="tipo === 'Nome parcial'">Use partes do nome na ordem em que aparecem, mesmo sem todos os sobrenomes. Exibimos até 50 pessoas; refine o nome se necessário.</p>
       <p class="busca-hint" *ngIf="tipo === 'CNPJ'">Informe os 14 dígitos, com ou sem pontuação. Consulta a empresa, o CNES e pessoas vinculadas em registros PEP. Até 50 registros por seção.</p>
     </div>

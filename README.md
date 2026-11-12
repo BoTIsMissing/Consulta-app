@@ -2,6 +2,12 @@
 
 Angular no GitHub Pages, API Node/Express no Render, login por e-mail/senha do Firebase e dados no SQL Server. O backend valida o token e a permissão `panelAccess` antes de consultar o banco.
 
+## Consulta por telefone
+
+Selecione **Telefone** e informe o DDD de 2 dígitos e o número de 8 ou 9 dígitos em campos separados. Aceita parênteses no DDD e hífen no número, sem acrescentar ou remover o nono dígito. A API autenticada `POST /api/buscar-telefone` recebe `{ "ddd": "11", "fone": "99999-9999" }` e consulta `BR..p_fone` com `ddd = @ddd AND fone = @fone`. O telefone não é pesquisado por trecho ou somente pelo número, sem DDD.
+
+Retorna até 50 pessoas vinculadas pelo `id`, sem repetir uma pessoa quando há múltiplos registros de telefone correspondentes. Uma pessoa é aberta diretamente; com várias, escolha na lista. Com o histórico habilitado, registra o tipo `telefone` e o termo normalizado `(DDD) número` antes do SQL. O número continua sendo texto para preservar zeros iniciais. Publique o backend antes do frontend.
+
 ## Consulta por placa
 
 Selecione **Placa** no painel. São aceitas placas antigas (`ABC-1234` ou `ABC1234`) e Mercosul (`ABC1D23`), inclusive em minúsculas. A consulta é exata e retorna até 50 registros, com os detalhes disponíveis do veículo e a descrição de nacionalidade. Não há associação com proprietário ou classificação de grupo sem um relacionamento confirmado no banco.
@@ -150,7 +156,7 @@ node backend/authorize-history-admin.js bot261446@gmail.com --revoke
 
 O primeiro comando preserva as outras permissões. O segundo remove apenas a permissão do histórico e revoga as sessões existentes para aplicar a restrição. Nenhuma rota pública concede esse papel.
 
-Depois de habilitado, cada busca validada grava **UID, e-mail, horário do servidor, tipo e termo pesquisado**, antes do acesso ao SQL. Inclui buscas por nome, nome parcial, CPF, CNPJ, placa, endereço e aberturas de pessoas por ID. Se a gravação falhar, a consulta retorna 503 e o SQL não é executado. O registro representa a solicitação: não comprova sucesso, existência de resultados ou que o usuário visualizou os dados. Não copia resultados completos, senhas, tokens nem IPs. Entradas inválidas e chamadas sem autorização não são gravadas. O frontend informa aos usuários que as consultas podem ser revisadas pelo administrador.
+Depois de habilitado, cada busca validada grava **UID, e-mail, horário do servidor, tipo e termo pesquisado**, antes do acesso ao SQL. Inclui buscas por nome, nome parcial, CPF, CNPJ, telefone, placa, endereço e aberturas de pessoas por ID. Se a gravação falhar, a consulta retorna 503 e o SQL não é executado. O registro representa a solicitação: não comprova sucesso, existência de resultados ou que o usuário visualizou os dados. Não copia resultados completos, senhas, tokens nem IPs. Entradas inválidas e chamadas sem autorização não são gravadas. O frontend informa aos usuários que as consultas podem ser revisadas pelo administrador.
 
 Não há recuperação retroativa de buscas anteriores à ativação, nem exclusão automática. Os registros permanecem até exclusão administrativa no Firestore; limite a retenção ao período necessário e acompanhe o uso. A leitura é paginada e não mantém listener em tempo real. Uma escrita é feita por solicitação, e cada página lê até 51 documentos. O banco padrão tem [cotas gratuitas](https://firebase.google.com/docs/firestore/quotas); não foram habilitados faturamento, TTL pago ou outros serviços pagos. O SDK do servidor usa IAM e [não depende das regras de clientes](https://firebase.google.com/docs/firestore/security/get-started) para conceder acesso.
 

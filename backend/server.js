@@ -5,7 +5,8 @@ const { requireAuth } = require('./auth');
 const runtimeConfig = require('./runtime-config.json');
 const { getDatabasePool, closeDatabasePool } = require('./database-pool');
 const { securityHeaders, noStore, createRequestLimits, createQueryGate } = require('./security');
-const { bodyFields, searchText, cpfText, cnpjText, plateText, personId, escapeLike, nameSearch } = require('./input-validation');
+const { bodyFields, searchText, cpfText, cnpjText, phoneParts, plateText, personId, escapeLike, nameSearch } = require('./input-validation');
+const { phoneQuery } = require('./phone-query');
 const { cnpjQuery } = require('./cnpj-query');
 const { buscarEmpresa, settledResults } = require('./company-query');
 const { vehicleQuery } = require('./vehicle-query');
@@ -136,6 +137,22 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
         .query(`SELECT TOP 50 CONVERT(varchar(20), id) AS id, cpf, name, birth_date, genre FROM people
           WHERE name ${buscaParcial ? 'LIKE' : '='} @termo COLLATE Latin1_General_CI_AI
           ORDER BY name, id`);
+      res.json({ total: result.recordset.length, candidatos: result.recordset });
+    } catch (err) {
+      await handleDatabaseError(res, err);
+    }
+  }));
+
+  api.post('/buscar-telefone', guardQuery(async (req, res) => {
+    try {
+      const body = bodyFields(req.body, ['ddd', 'fone']);
+      const { ddd, fone } = phoneParts(body.ddd, body.fone);
+      await recordSearch(req, 'telefone', `(${ddd}) ${fone}`);
+      const pool = await getPool();
+      const result = await pool.request()
+        .input('ddd', sql.VarChar(2), ddd)
+        .input('fone', sql.VarChar(9), fone)
+        .query(phoneQuery);
       res.json({ total: result.recordset.length, candidatos: result.recordset });
     } catch (err) {
       await handleDatabaseError(res, err);

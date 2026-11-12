@@ -59,7 +59,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
   label(type: string) {
     const labels: Record<string, string> = {
       nome: 'Nome completo', nome_parcial: 'Nome parcial', cpf: 'CPF', cnpj: 'CNPJ',
-      placa: 'Placa', endereco: 'Endereço', id: 'Abertura de pessoa por ID',
+      placa: 'Placa', telefone: 'Telefone', endereco: 'Endereço', id: 'Abertura de pessoa por ID',
     };
     return labels[type] || type;
   }

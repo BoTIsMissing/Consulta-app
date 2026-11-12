@@ -67,6 +67,10 @@ export class ConsultaService {
     return this.http.post<ResultadoCompleto>(`${this.apiUrl}/buscar-cpf`, { termo });
   }
 
+  buscarTelefone(ddd: string, fone: string): Observable<{ total: number; candidatos: Candidato[] }> {
+    return this.http.post<{ total: number; candidatos: Candidato[] }>(`${this.apiUrl}/buscar-telefone`, { ddd, fone });
+  }
+
   buscarPlaca(termo: string): Observable<{ total: number; veiculos: Veiculo[] }> {
     return this.http.post<{ total: number; veiculos: Veiculo[] }>(`${this.apiUrl}/buscar-placa`, { termo });
   }
