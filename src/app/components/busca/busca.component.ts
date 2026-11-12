@@ -1,19 +1,22 @@
-import { Component, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ConsultaService, Candidato, DadosEmpresa } from '../../services/consulta.service';
 import { Subject, takeUntil } from 'rxjs';
 import { PhoneInputComponent } from './phone-input.component';
+import { SidebarComponent } from './sidebar.component';
 
 @Component({
   selector: 'app-busca',
   standalone: true,
-  imports: [CommonModule, FormsModule, PhoneInputComponent],
+  imports: [CommonModule, FormsModule, PhoneInputComponent, SidebarComponent],
   templateUrl: './busca.component.html',
   styleUrls: ['./busca.component.scss'],
 })
 export class BuscaComponent implements OnDestroy {
+  @Input() historyMode = false;
+  @Output() searchSelected = new EventEmitter<void>();
   private stopRequests = new Subject<void>();
   termo = '';
   ddd = '';
@@ -78,6 +81,12 @@ export class BuscaComponent implements OnDestroy {
 
   atualizarTermo(valor: string) {
     this.termo = this.buscaPorNome || this.tipo === 'Placa' ? valor.toUpperCase() : valor;
+  }
+
+  selecionarTipo(tipo: string) {
+    this.tipo = tipo;
+    this.limpar();
+    this.searchSelected.emit();
   }
 
   get podeBuscar(): boolean {

@@ -1,0 +1,37 @@
+  <aside class="sidebar">
+    <div class="logo">
+      <img class="logo-image" src="Logo.png" alt="" width="64" height="64" />
+      <span class="logo-text">Consulta<br><strong>BR</strong></span>
+    </div>
+
+    <div class="sidebar-scroll">
+    <nav class="nav nav-tipos" aria-label="Tipo de busca">
+      <span class="nav-label">Buscar por</span>
+      <ul>
+        <li *ngFor="let t of ['Nome','Nome parcial','CPF','CNPJ','Telefone','Endereço','Placa']" [class.ativo]="tipo === t && !historyMode">
+          <button type="button" [attr.aria-pressed]="tipo === t && !historyMode" (click)="selected.emit(t)">
+            {{ t === 'Nome' || t === 'Nome parcial' ? '👤' : t === 'CPF' ? '🪪' : t === 'CNPJ' ? '🏢' : t === 'Telefone' ? '📞' : t === 'Placa' ? '🚗' : '📍' }} {{ t }}
+          </button>
+        </li>
+      </ul>
+    </nav>
+
+    <nav class="nav nav-secoes" *ngIf="dados && !historyMode" aria-label="Seções do resultado">
+      <span class="nav-label">Seções</span>
+      <ul>
+        <li *ngFor="let s of secoes" [class.tem-dados]="temDados(s.key)">
+          <a [attr.href]="temDados(s.key) ? '#secao-' + s.key : null"
+            [attr.aria-disabled]="!temDados(s.key)" [attr.tabindex]="temDados(s.key) ? 0 : -1">
+            {{ s.label }}
+            <span class="count" *ngIf="temDados(s.key)">{{ dados[s.key].length }}</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    </div>
+    <div class="sidebar-footer">
+      <span>SQL Server · BR</span>
+      <span class="dot online"></span>
+    </div>
+  </aside>

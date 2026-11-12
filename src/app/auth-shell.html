@@ -4,6 +4,7 @@
   </main>
 } @else if (auth.authorized()) {
   <div class="authenticated-shell">
+  <app-busca [historyMode]="showHistory && auth.historyAdmin()" (searchSelected)="showHistory = false">
   <header class="session-bar">
     <span>{{ auth.user()?.email }}</span>
     @if (auth.historyEnabled()) { <span class="audit-notice">Consultas registradas para revisão pelo administrador.</span> }
@@ -14,14 +15,15 @@
     }
     <button type="button" (click)="auth.logout()">Sair</button>
   </header>
-  <div class="panel-content">
   @if (showHistory && auth.historyAdmin()) {
+    <section history-panel>
     @if (!auth.historyEnabled()) {
       <p class="notice">A gravação do histórico ainda está desativada no servidor. Ative-a após configurar o Firestore.</p>
     }
     <app-history />
-  } @else { <app-busca /> }
-  </div>
+    </section>
+  }
+  </app-busca>
   </div>
 } @else {
   <main class="login-page">
