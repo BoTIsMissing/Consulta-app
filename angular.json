@@ -21,6 +21,7 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "src/main.ts",
+            "index": "index.html",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -36,7 +37,7 @@
           "configurations": {
             "production": {
               "index": {
-                "input": "src/index.production.html",
+                "input": "index.production.html",
                 "output": "index.html"
               },
               "budgets": [
