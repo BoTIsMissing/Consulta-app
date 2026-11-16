@@ -1,0 +1,14 @@
+:host{display:block}
+.welcome-state { padding:34px 0 8px; text-align:center; }
+.empty-orbit { display:grid; place-items:center; width:76px; height:76px; margin:0 auto 23px; color:#79a9e4; border:1px solid #294462; border-radius:24px; background:linear-gradient(145deg,#1b3552,#112135); box-shadow:0 0 0 9px #172b432e; }
+.welcome-state h2 { font-size:20px; font-weight:500; letter-spacing:-.4px; margin:0 0 10px; }
+.welcome-state > p { color:var(--muted); font-size:12px; line-height:1.9; margin:0; }
+.quick-choices { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; max-width:800px; margin:28px auto 0; }
+.quick-choices button { display:flex; align-items:center; gap:12px; min-height:74px; padding:15px; border:1px solid var(--line); border-radius:12px; background:#111f32; color:#b4cbe9; font:inherit; font-size:12px; text-align:left; cursor:pointer; }
+.quick-choices button:hover { border-color:#456d9e; background:#192d46; }
+.quick-choices span { flex:1; min-width:0; }
+.quick-choices small { display:block; margin-top:5px; color:#8da3c0; font-size:10px; }
+
+@media(max-width:1050px){.quick-choices{gap:8px}.quick-choices button{padding:12px;gap:8px}}
+@media(max-width:768px){.welcome-state{padding:25px 0 8px}.welcome-state h2{font-size:18px}.quick-choices{grid-template-columns:1fr;max-width:440px;margin-top:22px}.quick-choices button{min-height:65px;padding:14px}}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}

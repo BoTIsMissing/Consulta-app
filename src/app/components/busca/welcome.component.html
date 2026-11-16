@@ -1,0 +1,12 @@
+    <section class="welcome-state">
+      <div class="empty-orbit"><app-icon name="search" [size]="30" /></div>
+      <h2>Sua próxima descoberta começa aqui.</h2>
+      <p>Escolha uma modalidade e informe os dados para iniciar.<br>Os resultados aparecerão neste espaço.</p>
+      <div class="quick-choices">
+        @for (atalho of ['CPF','CNPJ','Placa']; track atalho) {<button type="button" (click)="choose.emit(atalho)">
+          <app-icon [name]="atalho === 'CPF' ? 'person' : atalho === 'CNPJ' ? 'building' : 'car'" [size]="19" />
+          <span>{{ atalho === 'CPF' ? 'Consultar pessoa' : atalho === 'CNPJ' ? 'Consultar empresa' : 'Consultar veículo' }}<small>Buscar por {{ atalho }}</small></span>
+          <app-icon name="arrow" [size]="15" />
+        </button>}
+      </div>
+    </section>

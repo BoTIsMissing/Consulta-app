@@ -2,6 +2,24 @@
 
 Angular no GitHub Pages, API Node/Express no Render, login por e-mail/senha do Firebase e dados no SQL Server. O backend valida o token e a permissão `panelAccess` antes de consultar o banco.
 
+## Interface
+
+A interface usa tema escuro, ícones SVG locais, cartões com campos em duas colunas no desktop e uma no celular, navegação lateral e cabeçalho na coluna de conteúdo. No celular, as modalidades e seções podem ser deslizadas horizontalmente. Os atalhos da tela inicial abrem as buscas de CPF, CNPJ e placa. A imagem `public/Logo.png` é usada na marca, no login e no ícone da guia, com caminho relativo compatível com o GitHub Pages. Não há novas dependências de fontes ou bibliotecas de ícones externas.
+
+## Família / vínculos e campos exibidos
+
+Os familiares são localizados por `p_connected.id_relative = people.id`, com conferência adicional do nome. O nome sozinho não identifica uma pessoa: vínculos sem ID correspondente ou com nome incompatível permanecem no resultado sem CPF/nascimento e com aviso. Os documentos e datas vêm de `people`, sem cruzamentos adicionais com `people_doc` e `people_year` que multiplicavam linhas.
+
+Duplicações compatíveis são removidas sem fundir homônimos com CPFs diferentes. Para unificar registros de IDs diferentes, CPF, nome, nascimento e tipo de parentesco precisam ser compatíveis. Dados conflitantes e tipos de parentesco diferentes são preservados. Identificar a pessoa pelo ID não comprova a veracidade do parentesco informado pela fonte.
+
+Os cartões ocultam campos técnicos como `dt_insert`, `dt_edit`, `dt_information`, `origin`, `order` e IDs internos, incluindo variações em maiúsculas. Datas relevantes ao cadastro e ao vínculo continuam sendo exibidas. Essa filtragem muda somente a apresentação e não altera o banco.
+
+## Busca por nome parcial
+
+O nome parcial é pesquisado a partir do início: `JOÃO SILVA` vira o parâmetro `JOÃO%SILVA%`, sem `%` inicial. Permite omitir sobrenomes intermediários, mas não encontra uma pessoa somente porque o termo aparece no meio do nome. Curingas fornecidos pelo usuário continuam escapados como caracteres literais.
+
+Essa busca usa a collation nativa da coluna `people.name` (`SQL_Latin1_General_CP1_CI_AS` na base verificada), sem conversão para outra collation. Portanto, distingue acentos: digite `JOÃO` para nomes cadastrados com `Ã`. A busca de nome completo mantém sua comparação anterior. A consulta parcial ordena por `name`, compatível com o índice existente, sem exigir ordenação adicional por ID; entre homônimos, os primeiros 50 não têm ordem garantida por ID. Consultas muito amplas ainda podem demorar, então prefira o primeiro nome inteiro e mais partes do nome. Nenhum índice ou dado foi alterado.
+
 ## Consulta por telefone
 
 Selecione **Telefone** e informe o DDD de 2 dígitos e o número de 8 ou 9 dígitos em campos separados. Aceita parênteses no DDD e hífen no número, sem acrescentar ou remover o nono dígito. A API autenticada `POST /api/buscar-telefone` recebe `{ "ddd": "11", "fone": "99999-9999" }` e consulta `BR..p_fone` com `ddd = @ddd AND fone = @fone`. O telefone não é pesquisado por trecho ou somente pelo número, sem DDD.

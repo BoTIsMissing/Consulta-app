@@ -6,14 +6,19 @@
   <div class="authenticated-shell">
   <app-busca [historyMode]="showHistory && auth.historyAdmin()" (searchSelected)="showHistory = false">
   <header class="session-bar">
-    <span>{{ auth.user()?.email }}</span>
-    @if (auth.historyEnabled()) { <span class="audit-notice">Consultas registradas para revisão pelo administrador.</span> }
+    <div class="workspace-label"><app-icon name="grid" [size]="17" /><span>Painel</span><span class="separator">/</span><strong>{{ showHistory && auth.historyAdmin() ? 'Histórico' : 'Consultas' }}</strong></div>
+    <div class="session-actions">
+    <div class="account-pill"><span class="user-avatar">{{ (auth.user()?.email || 'U').slice(0, 1).toUpperCase() }}</span><span class="user-email" [title]="auth.user()?.email || ''">{{ auth.user()?.email }}</span></div>
     @if (auth.historyAdmin()) {
-      <button type="button" (click)="showHistory = !showHistory" [attr.aria-pressed]="showHistory">
-        {{ showHistory ? 'Voltar às consultas' : 'Histórico de consultas' }}
+      <button type="button" (click)="showHistory = !showHistory" [attr.aria-pressed]="showHistory"
+        [attr.aria-label]="showHistory ? 'Voltar às consultas' : 'Histórico de consultas'" [title]="showHistory ? 'Voltar às consultas' : 'Histórico de consultas'">
+        <app-icon [name]="showHistory ? 'search' : 'history'" [size]="17" />
+        <span>{{ showHistory ? 'Voltar às consultas' : 'Histórico de consultas' }}</span>
       </button>
     }
-    <button type="button" (click)="auth.logout()">Sair</button>
+    <button class="logout" type="button" aria-label="Sair" title="Sair" (click)="auth.logout()"><app-icon name="logout" [size]="17" /><span>Sair</span></button>
+    </div>
+    @if (auth.historyEnabled()) { <span class="audit-notice"><app-icon name="shield" [size]="13" /> Consultas registradas para revisão administrativa.</span> }
   </header>
   @if (showHistory && auth.historyAdmin()) {
     <section history-panel>
@@ -27,10 +32,19 @@
   </div>
 } @else {
   <main class="login-page">
+    <div class="login-layout">
+    <section class="login-intro" aria-label="Consulta BR">
+      <div class="intro-brand"><img src="Logo.png" alt="" width="76" height="76" /><span>Consulta <strong>BR</strong></span></div>
+      <span class="intro-badge"><app-icon name="shield" [size]="15" /> ACESSO RESTRITO</span>
+      <h2>Informações conectadas.<br><em>Consultas mais claras.</em></h2>
+      <p>Pessoas, empresas e veículos em um único painel de consulta.</p>
+      <div class="intro-capabilities"><span><app-icon name="person" />Pessoas</span><span><app-icon name="building" />Empresas</span><span><app-icon name="car" />Veículos</span></div>
+      <div class="intro-security"><app-icon name="lock" [size]="18" /><span>Seu acesso é autorizado e verificado pelo administrador.</span></div>
+    </section>
     <section class="login-card" aria-labelledby="login-title">
-      <div class="brand"><span aria-hidden="true">⬡</span> Consulta <strong>BR</strong></div>
-      <p class="eyebrow">ACESSO À PLATAFORMA</p>
-      <h1 id="login-title">Entre para continuar</h1>
+      <div class="login-symbol"><app-icon name="lock" [size]="24" /></div>
+      <p class="eyebrow">BEM-VINDO AO CONSULTA BR</p>
+      <h1 id="login-title">Entre no seu painel</h1>
       <p class="description">Use o e-mail e a senha fornecidos pelo administrador para acessar as consultas.</p>
 
       @if (!auth.configured) {
@@ -60,7 +74,9 @@
       @if (auth.user()) {
         <button class="logout-button" type="button" (click)="auth.logout()">Sair desta conta</button>
       }
-      <p class="footer">Sua sessão é verificada antes de cada consulta. As consultas podem ser registradas para revisão pelo administrador.</p>
+      <p class="footer"><app-icon name="shield" [size]="14" /> Sua sessão é verificada antes de cada consulta.</p>
+      <p class="audit-disclosure">As consultas podem ser registradas para revisão pelo administrador.</p>
     </section>
+    </div>
   </main>
 }

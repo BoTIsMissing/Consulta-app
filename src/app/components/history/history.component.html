@@ -4,7 +4,7 @@
       <p class="eyebrow">ADMINISTRAÇÃO</p>
       <h1>Histórico de consultas</h1>
     </div>
-    <button type="button" (click)="refresh()" [disabled]="loading()">Atualizar</button>
+    <button type="button" (click)="refresh()" [disabled]="loading()"><app-icon name="history" [size]="17" />Atualizar</button>
   </header>
   <p class="description">Consultas solicitadas por todos os usuários, da mais recente para a mais antiga. Datas no horário deste dispositivo. O registro não garante que a busca tenha encontrado resultados.</p>
   <p class="description">O histórico começa após sua ativação. Aberturas de pessoas pela lista de resultados também são registradas por ID.</p>
@@ -17,7 +17,7 @@
     @for (entry of entries(); track entry.id) {
       <article class="entry">
         <div class="entry-header">
-          <strong>{{ entry.email }}</strong>
+          <span class="entry-user"><span class="entry-avatar"><app-icon name="person" [size]="18" /></span><strong>{{ entry.email }}</strong></span>
           <time [attr.datetime]="entry.at">{{ entry.at | date:'dd/MM/yyyy HH:mm:ss' }}</time>
         </div>
         <dl>

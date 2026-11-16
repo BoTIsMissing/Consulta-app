@@ -1,8 +1,9 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
-  selector: 'app-phone-input', standalone: true, imports: [FormsModule],
+  selector: 'app-phone-input', standalone: true, imports: [FormsModule, IconComponent],
   template: `
     <label><span>DDD</span>
       <input [ngModel]="ddd" (ngModelChange)="dddChange.emit($event)" inputmode="numeric"
@@ -15,7 +16,7 @@ import { FormsModule } from '@angular/forms';
         enterkeyhint="search" [disabled]="disabled" (keyup.enter)="search.emit()" />
     </label>
     @if (ddd || fone) {
-      <button type="button" aria-label="Limpar telefone" [disabled]="disabled" (click)="clear.emit()">✕</button>
+      <button type="button" aria-label="Limpar telefone" [disabled]="disabled" (click)="clear.emit()"><app-icon name="close" [size]="17" /></button>
     }
   `,
   styleUrl: './phone-input.component.scss',

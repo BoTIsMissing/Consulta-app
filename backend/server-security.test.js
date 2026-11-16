@@ -293,6 +293,18 @@ test('telefone retorna as pessoas encontradas com IDs textuais para seleção', 
   } finally { await app.close(); }
 });
 
+test('nome parcial usa prefixo parametrizado sem mudar a collation ou ordenar IDs', async () => {
+  const app = await start();
+  try {
+    assert.equal((await app.request('/api/buscar-nome', { termo: 'JOÃO SILVA', parcial: true })).status, 200);
+    assert.deepEqual(app.inputs.at(-1), { key: 'termo', value: 'JOÃO%SILVA%' });
+    assert.match(app.queries.at(-1), /WHERE name LIKE @termo\s+ORDER BY name\s*$/);
+    assert.doesNotMatch(app.queries.at(-1), /COLLATE|ORDER BY name, id/);
+    assert.equal((await app.request('/api/buscar-nome', { termo: 'JOÃO SILVA', parcial: false })).status, 200);
+    assert.match(app.queries.at(-1), /= @termo COLLATE Latin1_General_CI_AI/);
+  } finally { await app.close(); }
+});
+
 test('limite por conta não é contornado mudando o IP informado pelo cliente', async () => {
   const app = await start({ trustProxy: 1, rateLimits: { ipLimit: 1000, userLimit: 2 } });
   try {
@@ -336,6 +348,22 @@ test('detalhes da pessoa incluem PEP por ID parametrizado e preservam CNPJ textu
     assert.deepEqual(result.dados.pep, pep);
     assert.match(queries.find(query => query.includes('BR..p_pep')), /WHERE id = @id/);
     assert.equal(queries.length, 9);
+  } finally { await app.close(); }
+});
+
+test('detalhes não multiplicam familiares homônimos e unificam duplicações compatíveis', async () => {
+  const first = { id: '2', id_relative: '2', name_relative: 'PESSOA FICTICIA', relative: 'IRMAO', cpf: '00000000001', birth_date: '20000101' };
+  const other = { ...first, id: '3', id_relative: '3', cpf: '00000000002' };
+  const unresolved = { id: null, id_relative: null, name_relative: 'PESSOA FICTICIA', relative: 'PAI', cpf: null, birth_date: null };
+  const app = await start({ getPool: async () => ({ request: () => ({
+    input() { return this; },
+    async query(query) { return { recordset: query.includes('FROM BR..p_connected') ? [first, { ...first }, other, unresolved]
+      : query.includes('people      WHERE') ? [{ id: '1' }] : [] }; },
+  }) }) });
+  try {
+    const response = await app.request('/api/buscar-id', { id: '1' });
+    assert.equal(response.status, 200);
+    assert.deepEqual((await response.json()).dados.connected, [first, other, unresolved]);
   } finally { await app.close(); }
 });
 

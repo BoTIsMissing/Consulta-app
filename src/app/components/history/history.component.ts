@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Subject, takeUntil } from 'rxjs';
 import { apiUrl } from '../../config';
+import { IconComponent } from '../icon/icon.component';
 
 interface HistoryEntry {
   id: string; uid: string; email: string; type: string; term: string; at: string;
@@ -10,7 +11,7 @@ interface HistoryEntry {
 interface HistoryPage { items: HistoryEntry[]; nextCursor: string | null; }
 
 @Component({
-  selector: 'app-history', standalone: true, imports: [CommonModule],
+  selector: 'app-history', standalone: true, imports: [CommonModule, IconComponent],
   templateUrl: './history.component.html', styleUrl: './history.component.scss',
 })
 export class HistoryComponent implements OnInit, OnDestroy {

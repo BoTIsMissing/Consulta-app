@@ -7,6 +7,7 @@ const { getDatabasePool, closeDatabasePool } = require('./database-pool');
 const { securityHeaders, noStore, createRequestLimits, createQueryGate } = require('./security');
 const { bodyFields, searchText, cpfText, cnpjText, phoneParts, plateText, personId, escapeLike, nameSearch } = require('./input-validation');
 const { phoneQuery } = require('./phone-query');
+const { relativesQuery, deduplicateRelatives } = require('./relatives-query');
 const { cnpjQuery } = require('./cnpj-query');
 const { buscarEmpresa, settledResults } = require('./company-query');
 const { vehicleQuery } = require('./vehicle-query');
@@ -95,14 +96,7 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
         consultar('SELECT * FROM p_address   WHERE id = @id'),
         consultar('SELECT * FROM p_email     WHERE id = @id'),
         consultar('SELECT * FROM p_fone      WHERE id = @id'),
-        consultar(`
-          SELECT DISTINCT c.name, c.name_relative, c.relative, p.id, pd.cpf, py.birth_date
-          FROM BR..p_connected c
-          INNER JOIN BR..people p ON p.name = c.name_relative
-          LEFT JOIN BR..people_doc pd ON pd.id = p.id
-          LEFT JOIN BR..people_year py ON py.id = p.id
-          WHERE c.id = @id
-        `),
+        consultar(relativesQuery),
         consultar('SELECT * FROM p_credit    WHERE id = @id'),
         consultar('SELECT * FROM p_status    WHERE id = @id'),
         consultar(`SELECT cnpj, cnpj_relacionamento, dt_inicio, dt_carencia, descricao_profissao
@@ -117,7 +111,7 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
       address:   address.recordset,
       email:     email.recordset,
       fone:      fone.recordset,
-      connected: connected.recordset,
+      connected: deduplicateRelatives(connected.recordset),
       credit:    credit.recordset,
       status:    status.recordset,
       pep:       pep.recordset,
@@ -135,8 +129,8 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
       const result = await pool.request()
         .input('termo', sql.VarChar, parametro)
         .query(`SELECT TOP 50 CONVERT(varchar(20), id) AS id, cpf, name, birth_date, genre FROM people
-          WHERE name ${buscaParcial ? 'LIKE' : '='} @termo COLLATE Latin1_General_CI_AI
-          ORDER BY name, id`);
+          WHERE name ${buscaParcial ? 'LIKE @termo' : '= @termo COLLATE Latin1_General_CI_AI'}
+          ORDER BY ${buscaParcial ? 'name' : 'name, id'}`);
       res.json({ total: result.recordset.length, candidatos: result.recordset });
     } catch (err) {
       await handleDatabaseError(res, err);

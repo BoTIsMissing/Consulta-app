@@ -6,11 +6,14 @@ import { ConsultaService, Candidato, DadosEmpresa } from '../../services/consult
 import { Subject, takeUntil } from 'rxjs';
 import { PhoneInputComponent } from './phone-input.component';
 import { SidebarComponent } from './sidebar.component';
+import { IconComponent } from '../icon/icon.component';
+import { ResultCardComponent, CardField } from './result-card.component';
+import { WelcomeComponent } from './welcome.component';
 
 @Component({
   selector: 'app-busca',
   standalone: true,
-  imports: [CommonModule, FormsModule, PhoneInputComponent, SidebarComponent],
+  imports: [CommonModule, FormsModule, PhoneInputComponent, SidebarComponent, IconComponent, ResultCardComponent, WelcomeComponent],
   templateUrl: './busca.component.html',
   styleUrls: ['./busca.component.scss'],
 })
@@ -77,6 +80,23 @@ export class BuscaComponent implements OnDestroy {
 
   get buscaPorNome(): boolean {
     return this.tipo === 'Nome' || this.tipo === 'Nome parcial';
+  }
+
+  get tituloResultado(): string {
+    const nome = this.dados?.company?.[0]?.name1 || this.dados?.people?.[0]?.name || this.dados?.vehicles?.[0]?.plate;
+    return this.temValor(nome) ? String(nome) : 'Resultado da consulta';
+  }
+
+  get quantidadeSecoes(): number { return this.secoes.filter(secao => this.temDados(secao.key)).length; }
+
+  iconeSecao(key: string): string {
+    if (key.includes('address')) return 'map';
+    if (key.includes('email')) return 'mail';
+    if (key.includes('fone')) return 'phone';
+    if (key === 'vehicles') return 'car';
+    if (key === 'company' || key === 'pep') return 'building';
+    if (key === 'people' || key === 'connected' || key.includes('partners') || key.includes('representatives')) return 'person';
+    return 'grid';
   }
 
   atualizarTermo(valor: string) {
@@ -292,19 +312,30 @@ export class BuscaComponent implements OnDestroy {
   }
 
   temValor(valor: any): boolean {
-    return valor !== null && valor !== undefined && valor !== '' && valor !== 'None' && valor !== 'NULL';
+    return valor !== null && valor !== undefined
+      && (typeof valor !== 'string' || (valor.trim() !== '' && !['none', 'null'].includes(valor.trim().toLowerCase())));
   }
 
   keys(obj: any, secao = ''): string[] {
     if (!obj) return [];
-    if (secao === 'connected') return ['name', 'name_relative', 'relative', 'cpf', 'birth_date'];
+    if (secao === 'connected') return ['name_relative', 'relative', 'cpf', 'birth_date'].filter(k => this.temValor(obj[k]));
+    const tecnicos = new Set(['id', 'idrelative', 'idvehicles', 'dtinsert', 'dtedit', 'dtinformation',
+      'tdinsert', 'tdedit', 'dtupdate', 'dtupdated', 'createdat', 'updatedat', 'origin', 'order', 'edit']);
     return Object.keys(obj).filter(k =>
-      !['id', 'id_relative', ...(secao === 'vehicles' ? ['idvehicles'] : [])].includes(k.toLowerCase()) && this.temValor(obj[k]),
+      !tecnicos.has(k.toLowerCase().replace(/[_\s-]/g, '')) && this.temValor(obj[k]),
     );
+  }
+
+  campos(row: any, section: string): CardField[] {
+    return this.keys(row, section).map(key => ({ key, label: this.rotuloCampo(key, section), value: this.formatarValor(key, row[key]) }));
   }
 
   rotuloCampo(col: string, secao: string): string {
     if (col === 'relative') return 'Parentesco';
+    if (secao === 'connected') {
+      const rotulos: Record<string, string> = { name_relative: 'Nome do familiar', cpf: 'CPF', birth_date: 'Nascimento' };
+      return rotulos[col] || col;
+    }
     if (secao === 'company' || secao === 'cnes' || secao.startsWith('company_')) {
       const rotulos: Record<string, string> = {
         cnpj: 'CNPJ', cnpj8: 'Raiz do CNPJ', name1: 'Nome 1', name2: 'Nome 2',
@@ -336,7 +367,18 @@ export class BuscaComponent implements OnDestroy {
       };
       return rotulos[col] || col;
     }
-    if (secao !== 'vehicles') return col;
+    if (secao !== 'vehicles') {
+      const rotulos: Record<string, string> = {
+        name: 'Nome completo', cpf: 'CPF', cpf6: 'CPF parcial', birth_date: 'Nascimento', genre: 'Sexo',
+        age: 'Idade', name_mother: 'Nome da mãe', civil_status: 'Estado civil', scholarity: 'Escolaridade',
+        occupation_cod: 'Código da ocupação', occupation_description: 'Profissão', wage: 'Renda informada',
+        social_class: 'Classe social', logradouro: 'Logradouro', numero: 'Número', complemento: 'Complemento',
+        bairro: 'Bairro', cidade: 'Cidade', uf: 'UF', cep: 'CEP', latitude: 'Latitude', longitude: 'Longitude',
+        email: 'E-mail', telefone: 'Telefone', ddd: 'DDD', fone: 'Número', type_fone: 'Tipo de telefone',
+        status_cod: 'Código da situação', status_description: 'Descrição da situação',
+      };
+      return rotulos[col] || col.replace(/_/g, ' ');
+    }
     const rotulos: Record<string, string> = {
       plate: 'Placa', renavam: 'Renavam', chassis: 'Chassi', mark: 'Marca', model: 'Modelo',
       year_of_manufacture: 'Ano de fabricação', model_year: 'Ano do modelo', color: 'Cor',

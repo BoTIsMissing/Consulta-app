@@ -3,11 +3,12 @@ import { BuscaComponent } from './components/busca/busca.component';
 import { AuthService } from './services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { HistoryComponent } from './components/history/history.component';
+import { IconComponent } from './components/icon/icon.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [BuscaComponent, HistoryComponent, FormsModule],
+  imports: [BuscaComponent, HistoryComponent, FormsModule, IconComponent],
   templateUrl: './auth-shell.html',
   styleUrl: './auth-shell.scss',
 })

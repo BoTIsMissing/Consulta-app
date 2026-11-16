@@ -75,7 +75,7 @@ function nameSearch(value, partial = false) {
   if (!partial) return name;
   const parts = name.split(' ').map(part => part.replace(/\.+$/, '')).filter(Boolean);
   if (parts.join('').length < 2) invalid('Digite ao menos 2 caracteres do nome.');
-  return `%${parts.map(escapeLike).join('%')}%`;
+  return `${parts.map(escapeLike).join('%')}%`;
 }
 
 module.exports = { bodyFields, searchText, cpfText, cnpjText, phoneParts, plateText, personId, escapeLike, nameSearch };

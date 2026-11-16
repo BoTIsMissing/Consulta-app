@@ -1,0 +1,17 @@
+:host{display:block;min-width:0}
+.card { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); border:1px solid #293e59; border-radius:14px; background:#111f33; overflow:hidden; }
+.card-linha { display:flex; flex-direction:column; align-items:stretch; min-width:0; gap:7px; padding:17px 20px; border-bottom:1px solid #223550; }
+.card-label { color:#97adc9; font-size:10px; text-transform:uppercase; letter-spacing:.8px; overflow-wrap:anywhere; }
+.card-valor { display:flex; align-items:flex-start; flex:1; min-width:0; gap:8px; color:#e6effc; font-size:14px; line-height:1.65; font-variant-numeric:tabular-nums; }
+.valor-texto { flex:1; min-width:0; overflow-wrap:anywhere; }
+.btn-copiar { display:grid; place-items:center; flex-shrink:0; min-width:30px; min-height:30px; padding:4px; border:1px solid transparent; border-radius:7px; background:transparent; color:#86a5ce; cursor:pointer; }
+.btn-copiar:hover,.btn-copiar:focus-visible { border-color:#456b96; background:#1d3755; color:#bedbff; }
+.btn-copiar.copiado { color:#85d6bc; background:#153e38; }
+.card > .busca-hint,.card > .mapa-wrap{grid-column:1/-1}
+.card > .busca-hint{background:#302d24;color:#e4cb93}
+.busca-hint{display:flex;flex-direction:row;align-items:flex-start;gap:10px;margin:0;font-size:11px;line-height:1.8}
+.mapa-wrap{width:100%;overflow:hidden;background:#102038}
+.mapa-embed{display:block;width:100%;height:280px;border:0}
+@media(max-width:768px){.card{grid-template-columns:1fr}.card-linha{padding:15px 17px}.card-label{font-size:11px}.btn-copiar{min-width:44px;min-height:44px}.mapa-embed{height:230px}}
+@media(hover:none),(pointer:coarse){.btn-copiar{min-width:44px;min-height:44px}}
+@media print{.no-print{display:none!important}.card{break-inside:avoid;background:white;border-color:#ccc}.card-valor{color:#111}.card-label{color:#555}.card>.busca-hint{background:white;color:#555}}
