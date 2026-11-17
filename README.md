@@ -8,9 +8,9 @@ A interface usa tema escuro, ícones SVG locais, cartões com campos em duas col
 
 ## Família / vínculos e campos exibidos
 
-Os familiares são localizados por `p_connected.id_relative = people.id`, com conferência adicional do nome. O nome sozinho não identifica uma pessoa: vínculos sem ID correspondente ou com nome incompatível permanecem no resultado sem CPF/nascimento e com aviso. Os documentos e datas vêm de `people`, sem cruzamentos adicionais com `people_doc` e `people_year` que multiplicavam linhas.
+Os familiares são localizados exclusivamente por `p_connected.id_relative = people.id`, sem busca ou conferência por nome ou CPF. Nome, CPF e nascimento vêm da pessoa correspondente ao ID, mesmo quando o nome informado no vínculo difere do cadastro atual. Vínculos sem ID correspondente permanecem sem documentos e com aviso; nesse caso, o nome original é exibido. Não há cruzamentos adicionais com `people_doc` e `people_year` que multiplicavam linhas.
 
-Duplicações compatíveis são removidas sem fundir homônimos com CPFs diferentes. Para unificar registros de IDs diferentes, CPF, nome, nascimento e tipo de parentesco precisam ser compatíveis. Dados conflitantes e tipos de parentesco diferentes são preservados. Identificar a pessoa pelo ID não comprova a veracidade do parentesco informado pela fonte.
+Repetições do mesmo `id_relative` e tipo de parentesco são removidas. IDs diferentes permanecem separados mesmo com nome, CPF e nascimento iguais. Parentescos diferentes para o mesmo ID também são preservados. Sem identificador, o backend não deduz a identidade para unificar registros por nome ou documento. Identificar a pessoa pelo ID não comprova a veracidade do parentesco informado pela fonte.
 
 Os cartões ocultam campos técnicos como `dt_insert`, `dt_edit`, `dt_information`, `origin`, `order` e IDs internos, incluindo variações em maiúsculas. Datas relevantes ao cadastro e ao vínculo continuam sendo exibidas. Essa filtragem muda somente a apresentação e não altera o banco.
 
