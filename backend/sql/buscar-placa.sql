@@ -8,7 +8,7 @@ BEGIN
     RETURN
 END
 
-SELECT TOP (50)
+SELECT TOP (250)
     d.id,
     d.idvehicles,
     d.plate,
@@ -36,7 +36,7 @@ WHERE d.plate = @plate
 -- A nacionalidade e um lookup compativel com os dados inspecionados
 -- Nao existe chave estrangeira declarada garantindo essa correspondencia
 -- Codigos desconhecidos preservam o veiculo e retornam descricao NULL
--- TOP (50) limita o retorno, mas nao garante leitura rapida sem indice em plate
--- Sem ORDER BY, as linhas sao arbitrarias caso haja mais de 50 resultados
+-- TOP (250) limita o retorno, mas nao garante leitura rapida sem indice em plate
+-- Sem ORDER BY, as linhas sao arbitrarias caso haja mais de 250 resultados
 -- br_group_vehicles nao foi incluida: nenhuma ligacao foi confirmada
 -- idvehicles nao deve ser usado como chave de grupo sem evidencia adicional

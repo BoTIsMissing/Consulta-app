@@ -36,9 +36,9 @@
           <app-icon name="search" [size]="18" />{{ carregando ? 'Buscando...' : 'Buscar' }}<app-icon class="search-arrow" name="arrow" [size]="17" />
         </button>
       </div>
-      <p class="busca-hint">{{ tipo === 'Placa' ? 'Digite a placa completa, com ou sem hífen, e pressione Enter. Até 50 registros por consulta.' : tipo === 'CNPJ' ? 'Digite o CNPJ completo e pressione Enter' : tipo === 'Telefone' ? 'Informe o DDD de 2 dígitos e o número de 8 ou 9 dígitos. Aceita hífen. Até 50 pessoas por consulta.' : 'Digite ao menos 2 caracteres e pressione Enter' }}</p>
-      <p class="busca-hint" *ngIf="tipo === 'Nome parcial'">A busca começa pelo início do nome. Você pode omitir sobrenomes intermediários. Use os acentos do cadastro e prefira informar o primeiro nome inteiro. Até 50 pessoas por consulta.</p>
-      <p class="busca-hint" *ngIf="tipo === 'CNPJ'">Informe os 14 dígitos, com ou sem pontuação. Consulta a empresa, o CNES e pessoas vinculadas em registros PEP. Até 50 registros por seção.</p>
+      <p class="busca-hint">{{ tipo === 'Placa' ? 'Digite a placa completa, com ou sem hífen, e pressione Enter. Até 250 registros por consulta.' : tipo === 'CNPJ' ? 'Digite o CNPJ completo e pressione Enter' : tipo === 'Telefone' ? 'Informe o DDD de 2 dígitos e o número de 8 ou 9 dígitos. Aceita hífen. Até 250 pessoas por consulta.' : 'Digite ao menos 2 caracteres e pressione Enter' }}</p>
+      <p class="busca-hint" *ngIf="tipo === 'Nome parcial'">A busca começa pelo início do nome. Você pode omitir sobrenomes intermediários. Use os acentos do cadastro e prefira informar o primeiro nome inteiro. Até 250 pessoas por consulta.</p>
+      <p class="busca-hint" *ngIf="tipo === 'CNPJ'">Informe os 14 dígitos, com ou sem pontuação. Consulta a empresa, o CNES e pessoas vinculadas em registros PEP. Até 250 registros por seção.</p>
     </div>
 
     <!-- Carregando -->

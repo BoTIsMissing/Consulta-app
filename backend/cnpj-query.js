@@ -1,6 +1,6 @@
 // EXISTS evita repetir uma pessoa quando há vários registros PEP correspondentes.
 const cnpjQuery = `
-  SELECT TOP (50) CONVERT(varchar(20), p.id) AS id,
+  SELECT TOP (250) CONVERT(varchar(20), p.id) AS id,
     p.cpf, p.name, p.birth_date, p.genre
   FROM BR..people p
   WHERE EXISTS (

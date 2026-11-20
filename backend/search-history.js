@@ -2,7 +2,7 @@ const { getFirestore, Timestamp, FieldPath } = require('firebase-admin/firestore
 const { getFirebaseAuth } = require('./auth');
 
 const COLLECTION = 'searchHistory';
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 250;
 
 function decodeCursor(value) {
   if (value === undefined || value === null) return null;

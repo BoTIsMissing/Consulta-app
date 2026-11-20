@@ -140,21 +140,23 @@ test('gravação escolhe apenas campos previstos e usa o horário do servidor', 
   assert.deepEqual(saved, { uid: 'user', email: 'user@example.test', type: 'cpf', term: '00000000000', at: now });
 });
 
-test('paginação usa data e ID para desempatar e lê no máximo 51 documentos', async () => {
+test('paginação usa data e ID para desempatar e lê no máximo 251 documentos', async () => {
   const at = Timestamp.fromMillis(1700000000000);
-  const docs = Array.from({ length: 51 }, (_, index) => ({ id: `entry${index}`, data: () => ({ uid: 'user', email: 'user@example.test', type: 'cpf', term: '00000000000', at }) }));
+  const docs = Array.from({ length: 251 }, (_, index) => ({ id: `entry${index}`, data: () => ({ uid: 'user', email: 'user@example.test', type: 'cpf', term: '00000000000', at }) }));
   let resumed;
   const query = {
     orderBy() { return this; }, startAfter(...args) { resumed = args; return this; },
-    limit(value) { assert.equal(value, 51); return this; }, async get() { return { docs }; },
+    limit(value) { assert.equal(value, 251); return this; }, async get() { return { docs }; },
   };
   const store = createHistoryStore({ enabled: true, getDb: () => ({ collection: () => query }) });
   const first = await store.list(null);
-  assert.equal(first.items.length, 50);
-  assert.deepEqual(decodeCursor(first.nextCursor), { at: at.toMillis(), id: 'entry49' });
+  assert.equal(first.items.length, 250);
+  assert.deepEqual(decodeCursor(first.nextCursor), { at: at.toMillis(), id: 'entry249' });
   await store.list(first.nextCursor);
   assert.equal(resumed[0].toMillis(), at.toMillis());
-  assert.equal(resumed[1], 'entry49');
+  assert.equal(resumed[1], 'entry249');
+  docs.length = 250;
+  assert.equal((await store.list(null)).nextCursor, null);
   docs.length = 1;
   assert.equal((await store.list(null)).nextCursor, null);
 });

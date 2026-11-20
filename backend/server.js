@@ -128,7 +128,7 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
       const pool = await getPool();
       const result = await pool.request()
         .input('termo', sql.VarChar, parametro)
-        .query(`SELECT TOP 50 CONVERT(varchar(20), id) AS id, cpf, name, birth_date, genre FROM people
+        .query(`SELECT TOP 250 CONVERT(varchar(20), id) AS id, cpf, name, birth_date, genre FROM people
           WHERE name ${buscaParcial ? 'LIKE @termo' : '= @termo COLLATE Latin1_General_CI_AI'}
           ORDER BY ${buscaParcial ? 'name' : 'name, id'}`);
       res.json({ total: result.recordset.length, candidatos: result.recordset });
@@ -231,7 +231,7 @@ function createApp({ authenticate = requireAuth, getPool = getDatabasePool,
       const result = await pool.request()
         .input('termo', sql.VarChar, `%${escapeLike(termo.toUpperCase())}%`)
         .query(`
-          SELECT TOP 50 CONVERT(varchar(20), a.id) AS id, a.logradouro, a.numero, a.complemento,
+          SELECT TOP 250 CONVERT(varchar(20), a.id) AS id, a.logradouro, a.numero, a.complemento,
                  a.bairro, a.cidade, a.uf, a.cep, a.latitude, a.longitude,
                  p.name, p.cpf
           FROM p_address a

@@ -49,6 +49,20 @@ test('detalhes usam os IDs de company como BigInt textual, preservando todos os 
   }
 });
 
+test('250 empresas preservam todos os IDs nos parâmetros das consultas de detalhes', async () => {
+  const companies = Array.from({ length: 250 }, (_, index) => ({ id: String(9007199254740993n + BigInt(index)) }));
+  const pool = fakePool(companies);
+  const data = await buscarEmpresa(pool, '00123456000100', '00.123.456/0001-00');
+  assert.deepEqual(data.company, companies);
+  for (const call of pool.calls.slice(2)) {
+    assert.equal(Object.keys(call.inputs).length, 250);
+    assert.equal(call.inputs.companyId0, companies[0].id);
+    assert.equal(call.inputs.companyId249, companies[249].id);
+    assert.match(call.query, /@companyId249\)/);
+    assert.doesNotMatch(call.query, /\$IDS/);
+  }
+});
+
 test('uma falha aguarda as outras consultas antes de liberar o limite de concorrência', async () => {
   let finish;
   const pending = new Promise(resolve => { finish = resolve; });

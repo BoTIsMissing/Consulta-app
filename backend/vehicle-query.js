@@ -1,6 +1,6 @@
 // Não associar idvehicles a br_group_vehicles sem confirmar o relacionamento.
 const vehicleQuery = `
-  SELECT TOP (50)
+  SELECT TOP (250)
     CONVERT(varchar(20), d.id) AS id,
     CONVERT(varchar(20), d.idvehicles) AS idvehicles,
     d.plate, CONVERT(varchar(50), d.renavam) AS renavam,
